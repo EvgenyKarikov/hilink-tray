@@ -4,4 +4,4 @@
  Download packages: http://4pda.ru/forum/index.php?showtopic=582284&view=findpost&p=44545753
 
 # Install
- sudo make install
+ `sudo make install`
