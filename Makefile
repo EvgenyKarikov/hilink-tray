@@ -3,7 +3,7 @@ install:
 	cp hilink-tray.py /usr/bin/hilink-tray
 	chmod 755 hilink-tray.py /usr/bin/hilink-tray
 	mkdir /usr/share/pixmaps/hilink-tray
-	cp icons /usr/share/pixmaps/hilink-tray
+	cp -R icons /usr/share/pixmaps/hilink-tray
 	mkdir /var/log/hilink-tray
 	touch /var/log/hilink-tray/err.log
 uninstall:
