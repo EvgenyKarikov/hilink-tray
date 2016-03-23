@@ -153,17 +153,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self._checker = checker
         self.updateIcon(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
 
-    def disconnect(self):
-        g = Grab()
-        g.go('http://' + ip)
-        g.setup(post='<?xml version="1.0" encoding="UTF-8"?><request><dataswitch>0</dataswitch></request>')
-        g.go('http://' + ip + '/api/dialup/mobile-dataswitch')
-
     def createMenu(self):
         menu = QtGui.QMenu()
-        disconnectAction = QtGui.QAction("Disconnect", menu)
-        disconnectAction.triggered.connect(self.disconnect)
-        menu.addAction(disconnectAction)
         quitAction = QtGui.QAction("Quit", menu)
         quitAction.triggered.connect(self.close)
         menu.addAction(quitAction)
