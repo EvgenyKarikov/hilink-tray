@@ -6,8 +6,7 @@
 """hilink-tray - display signal level for HiLink modems in a tray
 
 Usage:
-    hilink-tray.py
-    hilink-tray.py --timeout=N --ip=IP
+    hilink-tray.py [--timeout=N] [--ip=IP] [--log=LOGFILE]
     hilink-tray.py -h | --help
     hilink-tray.py -v | --version
 
@@ -16,6 +15,8 @@ Options:
                       [default: 5]
     --ip=IP           modem ip
                       [default: 192.168.8.1]
+    --log=LOGFILE     write logs to this file
+                      [default: err.log]
     -v --version      show version
     -h --help         show this message and exit
 """
@@ -27,16 +28,6 @@ import logging
 import os.path as path
 from PySide import QtGui, QtCore
 import lxml.etree as xmlp
-
-try:
-    logTry = open('err.log')
-except IOError as e:
-    log = "/var/log/hilink-tray/err.log"
-else:
-    log = "err.log"
-logging.basicConfig(format="%(levelname)-8s [%(asctime)s] %(message)s",
-                    level=logging.ERROR,
-                    filename=log)
 
 
 class ModemSignalChecker(QtCore.QThread):
@@ -199,7 +190,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         tip = "{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
         "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}"
 
-        self.setToolTip(tip.format(values))
+        self.setToolTip(tip.format(**values))
         icon = self.signalIcon(iconLevel)
         self.setIcon(QtGui.QIcon(icon))
 
@@ -216,6 +207,11 @@ def main(ip, timeout):
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version="v2.0")
+    logFile = args["--log"]
+    logging.basicConfig(format="%(levelname)-8s [%(asctime)s] %(message)s",
+                        level=logging.ERROR,
+                        filename=logFile)
+
     ip = args["--ip"]
     timeout = int(args["--timeout"])
     sys.exit(main(ip, timeout))
