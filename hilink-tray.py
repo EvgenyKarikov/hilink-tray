@@ -1,13 +1,23 @@
 #!/usr/bin/env python
+# Copyright: 2016, Wasylews
+# Author: Wasylews
+# License: MIT
 
-""""Usage: hilink-tray [--timeout=N] [IP]
+"""hilink-tray - display signal level for HiLink modems in a tray
 
-
-Arguments:
-    IP  modem ip
+Usage:
+    hilink-tray.py
+    hilink-tray.py --timeout=N --ip=IP
+    hilink-tray.py -h | --help
+    hilink-tray.py -v | --version
 
 Options:
     -t N --timeout=N  download icon each N seconds
+                      [default: 5]
+    --ip=IP           modem ip
+                      [default: 192.168.8.1]
+    -v --version      show version
+    -h --help         show this message and exit
 """
 
 from __future__ import print_function
@@ -16,7 +26,6 @@ import sys
 import logging
 import os.path as path
 from PySide import QtGui, QtCore
-from grab import Grab
 import lxml.etree as xmlp
 
 try:
@@ -203,13 +212,7 @@ def main(ip, timeout):
     return app.exec_()
 
 if __name__ == '__main__':
-    args = docopt.docopt(__doc__)
-    if str(args["IP"]) == "None":
-        ip = "192.168.8.1"
-    else:
-        ip = args["IP"]
-    if str(args["--timeout"]) == "None":
-        timeout = "5"
-    else:
-        timeout = args["--timeout"]
-    sys.exit(main(ip, int(timeout)))
+    args = docopt.docopt(__doc__, version="v2.0")
+    ip = args["--ip"]
+    timeout = int(args["--timeout"])
+    sys.exit(main(ip, timeout))
