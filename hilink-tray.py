@@ -27,8 +27,14 @@ import sys
 import logging
 import os.path as path
 from PySide import QtGui, QtCore
-import lxml.etree as xmlp
+import xml.etree import ElementTree
 from string import Formatter
+from urlparse import urljoin
+
+try:
+    import urllib2 as urllib
+except ImportError:
+    import urllib
 
 
 class UnseenFormatter(Formatter):
@@ -53,12 +59,19 @@ class ModemSignalChecker(QtCore.QThread):
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
-        self._ip = ip
+        self._url = "http://{}".format(ip)
         self._timeout = timeout
         self._running = True
 
     def stop(self):
         self._running = False
+
+    def getCookie(self):
+        response = urllib.urlopen(urljoin(self._url,
+                                  "/api/webserver/SesTokInfo"))
+
+        xml = ElementTree.from_string(response.read())
+        return xml.find("SesInfo").text
 
     def run(self):
         connectionStatus = ""
