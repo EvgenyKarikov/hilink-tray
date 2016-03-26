@@ -32,6 +32,7 @@ from string import Formatter
 
 
 class UnseenFormatter(Formatter):
+    """String formatter for ''.format(), ignores empty values"""
     def __init__(self):
         Formatter.__init__(self)
 
@@ -46,8 +47,9 @@ class UnseenFormatter(Formatter):
 
 
 class ModemSignalChecker(QtCore.QThread):
-    levelChanged = QtCore.Signal(int, int, int, int, int, int, int, int, int,
-                                 int)
+    """Class for monitoring some modem parameters and send to gui"""
+    levelChanged = QtCore.Signal(int, str, str, str, str,
+                                 str, str, str, str, str)
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
@@ -59,17 +61,17 @@ class ModemSignalChecker(QtCore.QThread):
         self._running = False
 
     def run(self):
-        connectionStatus = "?"
+        connectionStatus = ""
         level = -1
-        operator = "?"
-        networkType = "?"
-        mode = "?"
-        rssi = "?"
-        rsrp = "?"
-        rsrq = "?"
-        sinr = "?"
-        rscp = "?"
-        ecio = "?"
+        operator = ""
+        networkType = ""
+        mode = ""
+        rssi = ""
+        rsrp = ""
+        rsrq = ""
+        sinr = ""
+        rscp = ""
+        ecio = ""
         while self._running:
             try:
                 g = Grab()
@@ -165,7 +167,7 @@ class ModemSignalChecker(QtCore.QThread):
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
-
+    """Simple tray indicator"""
     def __init__(self, checker):
         super(ModemIndicator, self).__init__()
         menu = self.createMenu()
