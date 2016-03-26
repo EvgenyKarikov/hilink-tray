@@ -40,7 +40,8 @@ logging.basicConfig(format="%(levelname)-8s [%(asctime)s] %(message)s",
 
 
 class ModemSignalChecker(QtCore.QThread):
-    levelChanged = QtCore.Signal(int, str, str, str, str, str, str, str, str, str)
+    levelChanged = QtCore.Signal(int, str, str, str, str, str, str, str, str,
+                                 str)
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
@@ -180,23 +181,25 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             iconPath = "icons"
         else:
             iconPath = "/usr/share/pixmaps/hilink-tray/icons"
-        if level == 5:
-            icon = path.join(iconPath, "icon_signal_05.png")
-        elif level == 4:
-            icon = path.join(iconPath, "icon_signal_04.png")
-        elif level == 3:
-            icon = path.join(iconPath, "icon_signal_03.png")
-        elif level == 2:
-            icon = path.join(iconPath, "icon_signal_02.png")
-        elif level == 1:
-            icon = path.join(iconPath, "icon_signal_01.png")
-        else:
-            icon = path.join(iconPath, "icon_signal_00.png")
-        return icon
 
-    def updateIcon(self, iconLevel, operator, networkType, connectionStatus, rssi, rsrp, rsrq, sinr, rscp, ecio):
-        toolTip = str(operator) + " " + str(networkType) + "\n" + str(connectionStatus) + "\n" + "RSSI: " + str(rssi) + "\n" + "RSRP: " + str(rsrp) + "\n" + "RSRQ: " + str(rsrq) + "\n" + "SINR: " + str(sinr) + "\n" + "RSCP: " + str(rscp) + "\n" + "Ec/Io: " + str(ecio)
-        self.setToolTip(toolTip)
+        if level in range(1, 6):
+            icon = "icon_signal_0{}.png".format(level)
+        else:
+            icon = "icon_signal_00.png"
+        return path.join(iconPath, icon)
+
+    def updateIcon(self, iconLevel, operator, networkType, connectionStatus,
+                   rssi, rsrp, rsrq, sinr, rscp, ecio):
+
+        values = {"operator": operator, "network": networkType,
+                  "status": connectionStatus, "rssi": rssi,
+                  "rsrp": rsrp, "rsrq": rsrq, "sinr": sinr,
+                  "rscp": rscp, "ecio": ecio}
+
+        tip = "{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
+        "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}"
+
+        self.setToolTip(tip.format(values))
         icon = self.signalIcon(iconLevel)
         self.setIcon(QtGui.QIcon(icon))
 
