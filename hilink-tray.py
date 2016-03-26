@@ -66,11 +66,12 @@ class ModemSignalChecker(QtCore.QThread):
     def stop(self):
         self._running = False
 
-    def getCookie(self):
-        response = urllib.urlopen(urljoin(self._url,
-                                  "/api/webserver/SesTokInfo"))
+    def _getXml(self, opener, section):
+        response = opener.urlopen(urljoin(self._url, section))
+        return ElementTree.from_string(response.read())
 
-        xml = ElementTree.from_string(response.read())
+    def getCookie(self, opener):
+        xml = self._getXml(opener, "/api/webserver/SesTokInfo")
         return xml.find("SesInfo").text
 
     def run(self):
@@ -85,10 +86,12 @@ class ModemSignalChecker(QtCore.QThread):
         sinr = ""
         rscp = ""
         ecio = ""
+
+        opener = urllib2.build_opener()
+        cookie = self.getCookie(opener)
+        opener.addheaders.append(("Cookie", cookie))
         while self._running:
             try:
-                g = Grab()
-                g.go('http://' + self._ip)
                 g.go('http://' + self._ip + '/api/monitoring/status')
                 status = xmlp.XML(g.response.body)
                 level = int(status.xpath('/response/SignalIcon/text()')[0])
