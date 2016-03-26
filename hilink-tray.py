@@ -28,11 +28,26 @@ import logging
 import os.path as path
 from PySide import QtGui, QtCore
 import lxml.etree as xmlp
+from string import Formatter
+
+
+class UnseenFormatter(Formatter):
+    def __init__(self):
+        Formatter.__init__(self)
+
+    def get_value(self, key, args, kwds):
+        if isinstance(key, str):
+            try:
+                return kwds[key]
+            except KeyError:
+                return ""
+        else:
+            Formatter.get_value(key, args, kwds)
 
 
 class ModemSignalChecker(QtCore.QThread):
-    levelChanged = QtCore.Signal(int, str, str, str, str, str, str, str, str,
-                                 str)
+    levelChanged = QtCore.Signal(int, int, int, int, int, int, int, int, int,
+                                 int)
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
@@ -62,7 +77,8 @@ class ModemSignalChecker(QtCore.QThread):
                 g.go('http://' + self._ip + '/api/monitoring/status')
                 status = xmlp.XML(g.response.body)
                 level = int(status.xpath('/response/SignalIcon/text()')[0])
-                networkType = int(status.xpath('/response/CurrentNetworkTypeEx/text()')[0])
+                networkType = int(
+                    status.xpath('/response/CurrentNetworkTypeEx/text()')[0])
                 if networkType == 0:
                     networkType = "No Service"
                 elif networkType == 1:
@@ -87,15 +103,16 @@ class ModemSignalChecker(QtCore.QThread):
                     networkType = "LTE"
                 else:
                     networkType = ""
-                connectionStatus = int(status.xpath('/response/ConnectionStatus/text()')[0])
+                connectionStatus = int(
+                    status.xpath('/response/ConnectionStatus/text()')[0])
                 if connectionStatus == 900:
-                	connectionStatus = "Connecting"
+                    connectionStatus = "Connecting"
                 elif connectionStatus == 901:
-                	connectionStatus ="Connected"
+                    connectionStatus = "Connected"
                 elif connectionStatus == 902:
-                	connectionStatus = "Disconnected"
+                    connectionStatus = "Disconnected"
                 else:
-                	connectionStatus = "?"
+                    connectionStatus = "?"
                 g.go('http://' + self._ip + '/api/net/current-plmn')
                 currentPlmn = xmlp.XML(g.response.body)
                 operator = currentPlmn.xpath('/response/FullName/text()')[0]
@@ -132,7 +149,7 @@ class ModemSignalChecker(QtCore.QThread):
                 level = -1
                 operator = "?"
                 networkType = ""
-                connectionStatus ="?"
+                connectionStatus = "?"
                 mode = "?"
                 rssi = "?"
                 rsrp = "?"
@@ -141,7 +158,9 @@ class ModemSignalChecker(QtCore.QThread):
                 rscp = "?"
                 ecio = "?"
 
-            self.levelChanged.emit(level, operator, networkType, connectionStatus, rssi, rsrp, rsrq, sinr, rscp, ecio)
+            self.levelChanged.emit(level, operator, networkType,
+                                   connectionStatus, rssi, rsrp, rsrq,
+                                   sinr, rscp, ecio)
             self.sleep(self._timeout)
 
 
@@ -152,7 +171,16 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         menu = self.createMenu()
         self.setContextMenu(menu)
         self._checker = checker
-        self.updateIcon(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+        self.updateStatus(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+
+    def iconsPath(self):
+        paths = ["icons", "/usr/share/pixmaps/hilink-tray/icons"]
+        for iconsPath in paths:
+            if not path.exists(iconsPath):
+                logging.error("Cannot find icons folder")
+                return ""
+            else:
+                return iconsPath
 
     def createMenu(self):
         menu = QtGui.QMenu()
@@ -168,29 +196,23 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         QtGui.qApp.quit()
 
     def signalIcon(self, level):
-        if path.exists("icons"):
-            iconPath = "icons"
-        else:
-            iconPath = "/usr/share/pixmaps/hilink-tray/icons"
-
         if level in range(1, 6):
             icon = "icon_signal_0{}.png".format(level)
         else:
             icon = "icon_signal_00.png"
-        return path.join(iconPath, icon)
+        return path.join(self.iconsPath(), icon)
 
-    def updateIcon(self, iconLevel, operator, networkType, connectionStatus,
-                   rssi, rsrp, rsrq, sinr, rscp, ecio):
-
+    def updateStatus(self, iconLevel, operator, networkType, connectionStatus,
+                     rssi, rsrp, rsrq, sinr, rscp, ecio):
         values = {"operator": operator, "network": networkType,
                   "status": connectionStatus, "rssi": rssi,
                   "rsrp": rsrp, "rsrq": rsrq, "sinr": sinr,
                   "rscp": rscp, "ecio": ecio}
 
-        tip = "{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
-        "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}"
+        tip = ("{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
+               "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}")
 
-        self.setToolTip(tip.format(**values))
+        self.setToolTip(tip.format(**values).strip())
         icon = self.signalIcon(iconLevel)
         self.setIcon(QtGui.QIcon(icon))
 
@@ -199,7 +221,7 @@ def main(ip, timeout):
     app = QtGui.QApplication(sys.argv)
     checker = ModemSignalChecker(ip, timeout)
     tray = ModemIndicator(checker)
-    checker.levelChanged.connect(tray.updateIcon)
+    checker.levelChanged.connect(tray.updateStatus)
     checker.start()
     tray.show()
 
