@@ -27,8 +27,7 @@ import sys
 import logging
 import os.path as path
 from PySide import QtGui, QtCore
-import xml.etree import ElementTree
-from string import Formatter
+from xml.etree import ElementTree
 from urlparse import urljoin
 
 try:
@@ -37,25 +36,9 @@ except ImportError:
     import urllib
 
 
-class UnseenFormatter(Formatter):
-    """String formatter for ''.format(), ignores empty values"""
-    def __init__(self):
-        Formatter.__init__(self)
-
-    def get_value(self, key, args, kwds):
-        if isinstance(key, str):
-            try:
-                return kwds[key]
-            except KeyError:
-                return ""
-        else:
-            Formatter.get_value(key, args, kwds)
-
-
 class ModemSignalChecker(QtCore.QThread):
     """Class for monitoring some modem parameters and send to gui"""
-    levelChanged = QtCore.Signal(int, str, str, str, str,
-                                 str, str, str, str, str)
+    levelChanged = QtCore.Signal(int, dict)
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
@@ -67,129 +50,84 @@ class ModemSignalChecker(QtCore.QThread):
         self._running = False
 
     def _getXml(self, opener, section):
-        response = opener.urlopen(urljoin(self._url, section))
+        response = opener.open(urljoin(self._url, section), timeout=1)
         return ElementTree.from_string(response.read())
 
     def getCookie(self, opener):
-        xml = self._getXml(opener, "/api/webserver/SesTokInfo")
-        return xml.find("SesInfo").text
+        try:
+            xml = self._getXml(opener, "/api/webserver/SesTokInfo")
+        except urllib.URLError:
+            return ""
+        else:
+            return xml.find("SesInfo").text
+
+    def getSignalLevel(self, xml):
+        return int(xml.find("SignalIcon").text)
+
+    def getNetworkType(self, xml):
+        types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
+                 "41": "WCDMA", "42": "HSDPA", "43": "HSUPA", "44": "HSPA",
+                 "45": "HSPA+", "46": "DC-HSPA+", "101": "LTE"}
+
+        return types[xml.find("CurrentNetworkTypeEx").text]
+
+    def getStatus(self, xml):
+        states = {"900": "Connecting", "901": "Connected",
+                  "902": "Disconnected"}
+        return states[xml.find("ConnectionStatus").text]
+
+    def getOperator(self, xml):
+        return xml.find("FullName").text
+
+    def getSignalParams(self, xml):
+        params = ["rssi", "rsrp", "rsrq", "sinr", "rscp",
+                  "ecio", "cell_id", "pci"]
+        values = {}
+
+        for key in params:
+            values[key] = "{key}: {val}".format(key=key.upper(),
+                                                val=xml.find(key).text)
+        return values
+
+    def getModemParams(self, opener):
+        statusXml = self._getXml(opener, "/api/monitoring/status")
+        level = self.getSignalLevel(statusXml)
+        params = {}
+
+        params["networkType"] = self.getNetworkType(statusXml)
+        params["status"] = self.getStatus(statusXml)
+
+        plmnXml = self._getXml(opener, "/api/net/current-plmn")
+        params["operator"] = self.getOperator(plmnXml)
+
+        signalXml = self._getXml(opener, "/api/device/signal")
+        params.update(self.getSignalParams(signalXml))
+        return (level, params)
 
     def run(self):
-        connectionStatus = ""
-        level = -1
-        operator = ""
-        networkType = ""
-        mode = ""
-        rssi = ""
-        rsrp = ""
-        rsrq = ""
-        sinr = ""
-        rscp = ""
-        ecio = ""
-
-        opener = urllib2.build_opener()
+        opener = urllib.build_opener()
         cookie = self.getCookie(opener)
         opener.addheaders.append(("Cookie", cookie))
+
         while self._running:
             try:
-                g.go('http://' + self._ip + '/api/monitoring/status')
-                status = xmlp.XML(g.response.body)
-                level = int(status.xpath('/response/SignalIcon/text()')[0])
-                networkType = int(
-                    status.xpath('/response/CurrentNetworkTypeEx/text()')[0])
-                if networkType == 0:
-                    networkType = "No Service"
-                elif networkType == 1:
-                    networkType = "GSM"
-                elif networkType == 2:
-                    networkType = "GPRS"
-                elif networkType == 3:
-                    networkType = "EDGE"
-                elif networkType == 41:
-                    networkType = "WCDMA"
-                elif networkType == 42:
-                    networkType = "HSDPA"
-                elif networkType == 43:
-                    networkType = "HSUPA"
-                elif networkType == 44:
-                    networkType = "HSPA"
-                elif networkType == 45:
-                    networkType = "HSPA+"
-                elif networkType == 46:
-                    networkType = "DC-HSPA+"
-                elif networkType == 101:
-                    networkType = "LTE"
-                else:
-                    networkType = ""
-                connectionStatus = int(
-                    status.xpath('/response/ConnectionStatus/text()')[0])
-                if connectionStatus == 900:
-                    connectionStatus = "Connecting"
-                elif connectionStatus == 901:
-                    connectionStatus = "Connected"
-                elif connectionStatus == 902:
-                    connectionStatus = "Disconnected"
-                else:
-                    connectionStatus = "?"
-                g.go('http://' + self._ip + '/api/net/current-plmn')
-                currentPlmn = xmlp.XML(g.response.body)
-                operator = currentPlmn.xpath('/response/FullName/text()')[0]
-                try:
-                    operator
-                except NameError:
-                    operator = "?"
-                g.go('http://' + self._ip + '/api/device/signal')
-                signal = xmlp.XML(g.response.body)
-                mode = int(signal.xpath('/response/mode/text()')[0])
-                if mode == 7:
-                    rssi = signal.xpath('/response/rssi/text()')[0]
-                    rsrp = signal.xpath('/response/rsrp/text()')[0]
-                    rsrq = signal.xpath('/response/rsrq/text()')[0]
-                    sinr = signal.xpath('/response/sinr/text()')[0]
-                    rscp = '?'
-                    ecio = '?'
-                elif mode == 0:
-                    rssi = '?'
-                    rsrp = '?'
-                    rsrq = '?'
-                    sinr = '?'
-                    rscp = '?'
-                    ecio = '?'
-                else:
-                    rssi = signal.xpath('/response/rssi/text()')[0]
-                    rsrp = '?'
-                    rsrq = '?'
-                    sinr = '?'
-                    rscp = signal.xpath('/response/rscp/text()')[0]
-                    ecio = signal.xpath('/response/ecio/text()')[0]
-            except Exception as e:
-                logging.error(e)
-                level = -1
-                operator = "?"
-                networkType = ""
-                connectionStatus = "?"
-                mode = "?"
-                rssi = "?"
-                rsrp = "?"
-                rsrq = "?"
-                sinr = "?"
-                rscp = "?"
-                ecio = "?"
-
-            self.levelChanged.emit(level, operator, networkType,
-                                   connectionStatus, rssi, rsrp, rsrq,
-                                   sinr, rscp, ecio)
+                (level, params) = self.getModemParams(opener)
+            except urllib.URLError:
+                self.levelChanged.emit(0, {"status": "Disconnected"})
+            else:
+                self.levelChanged.emit(level, params)
             self.sleep(self._timeout)
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
     """Simple tray indicator"""
+
     def __init__(self, checker):
         super(ModemIndicator, self).__init__()
         menu = self.createMenu()
         self.setContextMenu(menu)
         self._checker = checker
-        self.updateStatus(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+        self.updateStatus(0, {"status": "Disconnected"})
 
     def iconsPath(self):
         paths = ["icons", "/usr/share/pixmaps/hilink-tray/icons"]
@@ -220,18 +158,19 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             icon = "icon_signal_00.png"
         return path.join(self.iconsPath(), icon)
 
-    def updateStatus(self, iconLevel, operator, networkType, connectionStatus,
-                     rssi, rsrp, rsrq, sinr, rscp, ecio):
-        values = {"operator": operator, "network": networkType,
-                  "status": connectionStatus, "rssi": rssi,
-                  "rsrp": rsrp, "rsrq": rsrq, "sinr": sinr,
-                  "rscp": rscp, "ecio": ecio}
+    def statusStr(self, params):
+        tip = []
+        for (key, value) in params.items():
+            if value:
+                tip.append(value)
+        return "\n".join(tip)
 
-        tip = ("{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
-               "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}")
+    def updateStatus(self, level, params):
+        # tip = ("{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
+        #        "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}")
 
-        self.setToolTip(tip.format(**values).strip())
-        icon = self.signalIcon(iconLevel)
+        self.setToolTip(self.statusStr(params))
+        icon = self.signalIcon(level)
         self.setIcon(QtGui.QIcon(icon))
 
 
