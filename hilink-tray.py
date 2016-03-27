@@ -53,7 +53,7 @@ class ModemSignalChecker(QtCore.QThread):
         self._running = False
 
     def _getXml(self, opener, section):
-        response = opener.open(urljoin(self._url, section), timeout=1)
+        response = opener.open(urljoin(self._url, section))
         return ElementTree.fromstring(response.read())
 
     def getCookie(self, opener):
