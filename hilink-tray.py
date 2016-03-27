@@ -28,12 +28,13 @@ import logging
 import os.path as path
 from PySide import QtGui, QtCore
 from xml.etree import ElementTree
-from urlparse import urljoin
 
 try:
     import urllib2 as urllib
-except ImportError:
+    from urlparse import urljoin
+except ImportError:  # >= 3.x
     import urllib
+    from urllib.parse import urljoin
 
 
 class ModemSignalChecker(QtCore.QThread):
@@ -51,7 +52,7 @@ class ModemSignalChecker(QtCore.QThread):
 
     def _getXml(self, opener, section):
         response = opener.open(urljoin(self._url, section), timeout=1)
-        return ElementTree.from_string(response.read())
+        return ElementTree.fromstring(response.read())
 
     def getCookie(self, opener):
         try:
