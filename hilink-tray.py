@@ -169,9 +169,6 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         return "\n".join(tip)
 
     def updateStatus(self, level, params):
-        # tip = ("{operator} {network}\n{status}\nRSSI: {rssi}\nRSRP: {rsrp}\n"
-        #        "RSRQ: {rsrq}\nSINR: {sinr}\nRSCP: {rscp}\nEc/Io: {ecio}")
-
         self.setToolTip(self.statusStr(params))
         icon = self.signalIcon(level)
         self.setIcon(QtGui.QIcon(icon))
