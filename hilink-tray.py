@@ -115,7 +115,7 @@ class ModemSignalChecker(QtCore.QThread):
         while self._running:
             try:
                 (level, params) = self.getModemParams(opener)
-            except urllib.URLError, socket.timeout:
+            except (urllib.URLError, socket.timeout):
                 self.levelChanged.emit(0, {"status": "Disconnected"})
             else:
                 self.levelChanged.emit(level, params)
