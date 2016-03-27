@@ -28,6 +28,7 @@ import logging
 import os.path as path
 from PySide import QtGui, QtCore
 from xml.etree import ElementTree
+import socket
 
 try:
     import urllib2 as urllib
@@ -113,7 +114,7 @@ class ModemSignalChecker(QtCore.QThread):
         while self._running:
             try:
                 (level, params) = self.getModemParams(opener)
-            except urllib.URLError:
+            except urllib.URLError, socket.timeout:
                 self.levelChanged.emit(0, {"status": "Disconnected"})
             else:
                 self.levelChanged.emit(level, params)
