@@ -32,10 +32,11 @@ import socket
 from collections import OrderedDict
 
 try:
-    import urllib2 as urllib
+    from urllib2 import build_opener, URLError
     from urlparse import urljoin
 except ImportError:  # >= 3.x
-    import urllib
+    from urllib.request import build_opener
+    from urllib.error import URLError
     from urllib.parse import urljoin
 
 
@@ -59,7 +60,7 @@ class ModemSignalChecker(QtCore.QThread):
     def getCookie(self, opener):
         try:
             xml = self._getXml(opener, "/api/webserver/SesTokInfo")
-        except urllib.URLError:
+        except URLError:
             return ""
         else:
             return xml.find("SesInfo").text
@@ -108,14 +109,14 @@ class ModemSignalChecker(QtCore.QThread):
         return (level, params)
 
     def run(self):
-        opener = urllib.build_opener()
+        opener = build_opener()
         cookie = self.getCookie(opener)
         opener.addheaders.append(("Cookie", cookie))
 
         while self._running:
             try:
                 (level, params) = self.getModemParams(opener)
-            except (urllib.URLError, socket.timeout):
+            except (URLError, socket.timeout):
                 self.levelChanged.emit(0, {"status": "Disconnected"})
             else:
                 self.levelChanged.emit(level, params)
