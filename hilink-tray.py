@@ -29,6 +29,7 @@ import os.path as path
 from PySide import QtGui, QtCore
 from xml.etree import ElementTree
 import socket
+from collections import OrderedDict
 
 try:
     import urllib2 as urllib
@@ -82,9 +83,9 @@ class ModemSignalChecker(QtCore.QThread):
         return xml.find("FullName").text
 
     def getSignalParams(self, xml):
-        params = ["rssi", "rsrp", "rsrq", "sinr", "rscp",
-                  "ecio", "cell_id", "pci"]
-        values = {}
+        params = ["rssi", "rsrp", "rsrq", "rscp", "ecio", "sinr",
+                  "cell_id", "pci"]
+        values = OrderedDict()
 
         for key in params:
             values[key] = "{key}: {val}".format(key=key.upper(),
@@ -94,13 +95,13 @@ class ModemSignalChecker(QtCore.QThread):
     def getModemParams(self, opener):
         statusXml = self._getXml(opener, "/api/monitoring/status")
         level = self.getSignalLevel(statusXml)
-        params = {}
-
-        params["networkType"] = self.getNetworkType(statusXml)
-        params["status"] = self.getStatus(statusXml)
+        params = OrderedDict()
 
         plmnXml = self._getXml(opener, "/api/net/current-plmn")
-        params["operator"] = self.getOperator(plmnXml)
+        params["operator"] = "{} {}".format(self.getOperator(plmnXml),
+                                            self.getNetworkType(statusXml))
+
+        params["status"] = self.getStatus(statusXml)
 
         signalXml = self._getXml(opener, "/api/device/signal")
         params.update(self.getSignalParams(signalXml))
