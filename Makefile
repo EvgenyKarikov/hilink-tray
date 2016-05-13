@@ -1,13 +1,9 @@
 all: install
 install:
-	cp hilink-tray.py /usr/bin/hilink-tray
-	chmod 755 hilink-tray.py /usr/bin/hilink-tray
-	mkdir /usr/share/pixmaps/hilink-tray
-	cp -R icons /usr/share/pixmaps/hilink-tray
-	mkdir /var/log/hilink-tray
-	touch /var/log/hilink-tray/err.log
-	chmod 666 /var/log/hilink-tray/err.log
+	mkdir /opt/hilink-tray/
+	cp hilink-tray.py /opt/hilink-tray/
+	cp res_rc.py /opt/hilink-tray/
+	chmod 755 /opt/hilink-tray
+	ln -s /opt/hilink-tray/hilink-tray.py /usr/bin/hilink-tray
 uninstall:
-	rm /usr/bin/hilink-tray
-	rm -R /usr/share/pixmaps/hilink-tray
-	rm -R /var/log/hilink-tray
+	rm -R /opt/hilink-tray

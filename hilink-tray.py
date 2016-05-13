@@ -153,7 +153,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
     def signalIcon(self, level):
         if level in range(1, 6):
-            return "://images/icon_signal_0{}.png".format(level)
+            return "://images/icons/icon_signal_0{}.png".format(level)
         return "://images/icons/icon_signal_00.png"
 
     def statusStr(self, params):
