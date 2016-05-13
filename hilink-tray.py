@@ -22,7 +22,6 @@ Options:
 from __future__ import print_function
 import docopt
 import sys
-import os.path as path
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
 from xml.etree import ElementTree
@@ -136,6 +135,10 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         menu = self.createMenu()
         self.setContextMenu(menu)
         self._checker = checker
+
+        self.player = Phonon.createPlayer(Phonon.MusicCategory)
+        self.player.stateChanged.connect(self._playerLog)
+
         self.updateStatus(0, {"status": "Disconnected"})
 
     def createMenu(self):
@@ -148,7 +151,9 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def close(self):
         self.hide()
         self._checker.stop()
-        self._checker.wait()
+        if not self._checker.wait(5000):
+            self._checker.terminate()
+            self._checker.wait()
         QtGui.qApp.quit()
 
     def signalIcon(self, level):
@@ -169,13 +174,17 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         if params.pop("need_notify", False):
             # play notification sound
             source = Phonon.MediaSource("://sounds/sounds/unread_message.mp3")
-            player = Phonon.createPlayer(Phonon.MusicCategory, source)
-            player.play()
+            self.player.setCurrentSource(source)
+            self.player.play()
             # and change tray icon
             icon = "://images/icons/unread_message.gif"
 
         self.setToolTip(self.statusStr(params))
         self.setIcon(QtGui.QIcon(icon))
+
+    def _playerLog(self, newState, oldState):
+        if newState == Phonon.ErrorState:
+            print(self.player.errorString())
 
 
 def main(ip, timeout):
