@@ -6,7 +6,7 @@
 """hilink-tray - display signal level for HiLink modems in a tray
 
 Usage:
-    hilink-tray.py [--timeout=N] [--ip=IP] [--log=LOGFILE]
+    hilink-tray.py [--timeout=N] [--ip=IP]
     hilink-tray.py -h | --help
     hilink-tray.py -v | --version
 
@@ -15,8 +15,6 @@ Options:
                       [default: 5]
     --ip=IP           modem ip
                       [default: 192.168.8.1]
-    --log=LOGFILE     write logs to this file
-                      [default: err.log]
     -v --version      show version
     -h --help         show this message and exit
 """
@@ -24,7 +22,6 @@ Options:
 from __future__ import print_function
 import docopt
 import sys
-import logging
 import os.path as path
 from PySide import QtGui, QtCore
 from PySide.phonon import Phonon
@@ -141,16 +138,6 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self._checker = checker
         self.updateStatus(0, {"status": "Disconnected"})
 
-    def iconsPath(self):
-        paths = ["icons", "/usr/share/pixmaps/hilink-tray/icons"]
-
-        iconsPath = filter(path.exists, paths)
-        if not iconsPath:
-            logging.error("Cannot find icons folder")
-            return ""
-        else:
-            return iconsPath[0]
-
     def createMenu(self):
         menu = QtGui.QMenu()
         quitAction = QtGui.QAction("Quit", menu)
@@ -203,11 +190,6 @@ def main(ip, timeout):
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version="v2.0")
-    logFile = args["--log"]
-    logging.basicConfig(format="%(levelname)-8s [%(asctime)s] %(message)s",
-                        level=logging.ERROR,
-                        filename=logFile)
-
     ip = args["--ip"]
     timeout = int(args["--timeout"])
     sys.exit(main(ip, timeout))
