@@ -135,12 +135,13 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
     def iconsPath(self):
         paths = ["icons", "/usr/share/pixmaps/hilink-tray/icons"]
-        for iconsPath in paths:
-            if not path.exists(iconsPath):
-                logging.error("Cannot find icons folder")
-                return ""
-            else:
-                return iconsPath
+
+        iconsPath = filter(path.exists, paths)
+        if not iconsPath:
+            logging.error("Cannot find icons folder")
+            return ""
+        else:
+            return iconsPath[0]
 
     def createMenu(self):
         menu = QtGui.QMenu()
