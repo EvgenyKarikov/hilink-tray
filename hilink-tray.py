@@ -96,7 +96,7 @@ class ModemSignalChecker(QtCore.QThread):
         return values
 
     def checkNotify(self, xml):
-        return int(xml.find("unreadmessage").text) > 0
+        return int(xml.find("UnreadMessage").text) > 0
 
     def getModemParams(self, opener):
         statusXml = self._getXml(opener, "/api/monitoring/status")
