@@ -27,9 +27,11 @@ import sys
 import logging
 import os.path as path
 from PySide import QtGui, QtCore
+from PySide.phonon import Phonon
 from xml.etree import ElementTree
 import socket
 from collections import OrderedDict
+import res_rc
 
 try:
     from urllib2 import build_opener, URLError
@@ -93,6 +95,9 @@ class ModemSignalChecker(QtCore.QThread):
                                                 val=xml.find(key).text)
         return values
 
+    def checkNotify(self, xml):
+        return int(xml.find("unreadmessage").text) > 0
+
     def getModemParams(self, opener):
         statusXml = self._getXml(opener, "/api/monitoring/status")
         level = self.getSignalLevel(statusXml)
@@ -103,6 +108,9 @@ class ModemSignalChecker(QtCore.QThread):
                                             self.getNetworkType(statusXml))
 
         params["status"] = self.getStatus(statusXml)
+
+        notifyXml = self._getXml(opener, "/api/monitoring/check-notifications")
+        params["need_notify"] = self.checkNotify(notifyXml)
 
         signalXml = self._getXml(opener, "/api/device/signal")
         params.update(self.getSignalParams(signalXml))
@@ -158,10 +166,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
     def signalIcon(self, level):
         if level in range(1, 6):
-            icon = "icon_signal_0{}.png".format(level)
-        else:
-            icon = "icon_signal_00.png"
-        return path.join(self.iconsPath(), icon)
+            return "://images/icon_signal_0{}.png".format(level)
+        return "://images/icons/icon_signal_00.png"
 
     def statusStr(self, params):
         tip = []
@@ -171,8 +177,17 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         return "\n".join(tip)
 
     def updateStatus(self, level, params):
-        self.setToolTip(self.statusStr(params))
         icon = self.signalIcon(level)
+
+        if params.pop("need_notify", False):
+            # play notification sound
+            source = Phonon.MediaSource("://sounds/sounds/unread_message.mp3")
+            player = Phonon.createPlayer(Phonon.MusicCategory, source)
+            player.play()
+            # and change tray icon
+            icon = "://images/icons/unread_message.gif"
+
+        self.setToolTip(self.statusStr(params))
         self.setIcon(QtGui.QIcon(icon))
 
 
