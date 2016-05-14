@@ -173,7 +173,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
         if params.pop("need_notify", False):
             # play notification sound
-            source = Phonon.MediaSource("://sounds/sounds/unread_message.mp3")
+            source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")
             self.player.setCurrentSource(source)
             self.player.play()
             # and change tray icon

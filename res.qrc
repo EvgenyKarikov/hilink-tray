@@ -9,6 +9,7 @@
     <file>icons/icon_signal_05.png</file>
   </qresource>
   <qresource prefix="sounds">
+    <file>sounds/unread_message.wav</file>
     <file>sounds/unread_message.mp3</file>
   </qresource>
 </RCC>
