@@ -96,8 +96,10 @@ class ModemSignalChecker(QtCore.QThread):
 
     def getModemParams(self, opener):
         statusXml = self._getXml(opener, "/api/monitoring/status")
-        level = self.getSignalLevel(statusXml)
+
         params = OrderedDict()
+
+        params["level"] = self.getSignalLevel(statusXml)
 
         plmnXml = self._getXml(opener, "/api/net/current-plmn")
         params["operator"] = "{} {}".format(self.getOperator(plmnXml),
@@ -110,7 +112,7 @@ class ModemSignalChecker(QtCore.QThread):
 
         signalXml = self._getXml(opener, "/api/device/signal")
         params.update(self.getSignalParams(signalXml))
-        return (level, params)
+        return params
 
     def run(self):
         opener = build_opener()
@@ -119,16 +121,18 @@ class ModemSignalChecker(QtCore.QThread):
 
         while self._running:
             try:
-                (level, params) = self.getModemParams(opener)
+                params = self.getModemParams(opener)
             except (URLError, socket.timeout):
-                self.levelChanged.emit(0, {"status": "Disconnected"})
+                self.levelChanged.emit({"level": 0, "status": "Disconnected"})
             else:
-                self.levelChanged.emit(level, params)
+                self.levelChanged.emit(params)
             self.sleep(self._timeout)
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
     """Simple tray indicator"""
+
+    _lastStatus = {}
 
     def __init__(self, checker):
         super(ModemIndicator, self).__init__()
@@ -139,7 +143,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self.player = Phonon.createPlayer(Phonon.MusicCategory)
         self.player.stateChanged.connect(self._playerLog)
 
-        self.updateStatus(0, {"status": "Disconnected"})
+        self.updateStatus({"level": 0, "status": "Disconnected"})
 
     def createMenu(self):
         menu = QtGui.QMenu()
@@ -168,8 +172,12 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
                 tip.append(value)
         return "\n".join(tip)
 
-    def updateStatus(self, level, params):
-        icon = self.signalIcon(level)
+    def updateStatus(self, params):
+        if params == self._lastStatus:
+            return
+
+        self._lastStatus = params
+        icon = self.signalIcon(params.pop("level", 0))
 
         if params.pop("need_notify", False):
             # play notification sound
@@ -196,6 +204,7 @@ def main(ip, timeout):
     tray.show()
 
     return app.exec_()
+
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version="v2.0")
