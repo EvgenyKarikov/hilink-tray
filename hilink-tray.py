@@ -40,7 +40,7 @@ except ImportError:  # >= 3.x
 
 class ModemSignalChecker(QtCore.QThread):
     """Class for monitoring some modem parameters and send to gui"""
-    levelChanged = QtCore.Signal(int, dict)
+    levelChanged = QtCore.Signal(dict)
 
     def __init__(self, ip, timeout):
         super(ModemSignalChecker, self).__init__()
