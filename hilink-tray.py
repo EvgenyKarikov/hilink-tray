@@ -3,31 +3,16 @@
 # Author: Wasylews
 # License: MIT
 
-"""hilink-tray - display signal level for HiLink modems in a tray
-
-Usage:
-    hilink-tray.py [--timeout=N] [--ip=IP]
-    hilink-tray.py -h | --help
-    hilink-tray.py -v | --version
-
-Options:
-    -t N --timeout=N  download icon each N seconds
-                      [default: 5]
-    --ip=IP           modem ip
-                      [default: 192.168.8.1]
-    -v --version      show version
-    -h --help         show this message and exit
-"""
-
 from __future__ import print_function
-import docopt
 import sys
-from PySide import QtGui, QtCore
+import signal
+import socket
+import res_rc
+import argparse
+from PySide import QtCore, QtGui
 from PySide.phonon import Phonon
 from xml.etree import ElementTree
-import socket
 from collections import OrderedDict
-import res_rc
 
 try:
     from urllib2 import build_opener, URLError
@@ -38,12 +23,16 @@ except ImportError:  # >= 3.x
     from urllib.parse import urljoin
 
 
-class ModemSignalChecker(QtCore.QThread):
-    """Class for monitoring some modem parameters and send to gui"""
-    levelChanged = QtCore.Signal(dict)
+class ModemMonitor(QtCore.QThread):
+    """ModemMonitor - class for monitoring modem parameters"""
+    levelChanged = QtCore.Signal(int)
+    statusChanged = QtCore.Signal(str, str)
+    signalParamsChanged = QtCore.Signal(OrderedDict)
+    unreadMessagesCountChanged = QtCore.Signal(int)
 
     def __init__(self, ip, timeout):
-        super(ModemSignalChecker, self).__init__()
+        super(ModemMonitor, self).__init__()
+
         self._url = "http://{}".format(ip)
         self._timeout = timeout
         self._running = True
@@ -52,10 +41,11 @@ class ModemSignalChecker(QtCore.QThread):
         self._running = False
 
     def _getXml(self, opener, section):
-        response = opener.open(urljoin(self._url, section))
+        response = opener.open(urljoin(self._url, section), timeout=1)
         return ElementTree.fromstring(response.read())
 
     def getCookie(self, opener):
+        """Get access token"""
         try:
             xml = self._getXml(opener, "/api/webserver/SesTokInfo")
         except URLError:
@@ -70,7 +60,6 @@ class ModemSignalChecker(QtCore.QThread):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
                  "41": "WCDMA", "42": "HSDPA", "43": "HSUPA", "44": "HSPA",
                  "45": "HSPA+", "46": "DC-HSPA+", "101": "LTE"}
-
         return types[xml.find("CurrentNetworkTypeEx").text]
 
     def getStatus(self, xml):
@@ -91,28 +80,47 @@ class ModemSignalChecker(QtCore.QThread):
                                                 val=xml.find(key).text)
         return values
 
-    def checkNotify(self, xml):
-        return int(xml.find("UnreadMessage").text) > 0
+    def getUnreadMessageCount(self, xml):
+        """Get number of unreaded messages"""
+        return int(xml.find("UnreadMessage").text)
 
-    def getModemParams(self, opener):
-        statusXml = self._getXml(opener, "/api/monitoring/status")
+    def monitorMessages(self, opener):
+        """Monitor count of unreaded messages"""
+        try:
+            notifyXml = self._getXml(opener,
+                                     "/api/monitoring/check-notifications")
+            messageCount = self.getUnreadMessageCount(notifyXml)
+        except:
+            self.unreadMessagesCountChanged.emit(0)
+        else:
+            self.unreadMessagesCountChanged.emit(messageCount)
 
-        params = OrderedDict()
+    def monitorStatus(self, opener):
+        """Monitor connection status"""
+        try:
+            statusXml = self._getXml(opener, "/api/monitoring/status")
+            plmnXml = self._getXml(opener, "/api/net/current-plmn")
+        except:
+            self.levelChanged.emit(0)
+            self.statusChanged.emit("Disconnected", "")
+        else:
+            signalLevel = self.getSignalLevel(statusXml)
+            self.levelChanged.emit(signalLevel)
 
-        params["level"] = self.getSignalLevel(statusXml)
+            status = self.getStatus(statusXml)
+            networkType = self.getNetworkType(statusXml)
+            operator = self.getOperator(plmnXml)
+            self.statusChanged.emit(status, "%s %s" % (operator, networkType))
 
-        plmnXml = self._getXml(opener, "/api/net/current-plmn")
-        params["operator"] = "{} {}".format(self.getOperator(plmnXml),
-                                            self.getNetworkType(statusXml))
-
-        params["status"] = self.getStatus(statusXml)
-
-        notifyXml = self._getXml(opener, "/api/monitoring/check-notifications")
-        params["need_notify"] = self.checkNotify(notifyXml)
-
-        signalXml = self._getXml(opener, "/api/device/signal")
-        params.update(self.getSignalParams(signalXml))
-        return params
+    def monitorSignalParams(self, opener):
+        """Monitor signal parameters"""
+        try:
+            signalXml = self._getXml(opener, "/api/device/signal")
+        except:
+            self.signalParamsChanged.emit({})
+        else:
+            params = self.getSignalParams(signalXml)
+            self.signalParamsChanged.emit(params)
 
     def run(self):
         opener = build_opener()
@@ -120,30 +128,28 @@ class ModemSignalChecker(QtCore.QThread):
         opener.addheaders.append(("Cookie", cookie))
 
         while self._running:
-            try:
-                params = self.getModemParams(opener)
-            except (URLError, socket.timeout):
-                self.levelChanged.emit({"level": 0, "status": "Disconnected"})
-            else:
-                self.levelChanged.emit(params)
+            self.monitorMessages(opener)
+            self.monitorStatus(opener)
+            self.monitorSignalParams(opener)
+
             self.sleep(self._timeout)
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
     """Simple tray indicator"""
 
-    _lastStatus = {}
+    # is user already notified about unreaded messages or not
+    _notified = False
 
-    def __init__(self, checker):
+    def __init__(self, monitor):
         super(ModemIndicator, self).__init__()
+        self.signalLevelChanged(0)
         menu = self.createMenu()
         self.setContextMenu(menu)
-        self._checker = checker
+        self._monitor = monitor
 
         self.player = Phonon.createPlayer(Phonon.MusicCategory)
         self.player.stateChanged.connect(self._playerLog)
-
-        self.updateStatus({"level": 0, "status": "Disconnected"})
 
     def createMenu(self):
         menu = QtGui.QMenu()
@@ -154,41 +160,49 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
     def close(self):
         self.hide()
-        self._checker.stop()
-        if not self._checker.wait(5000):
-            self._checker.terminate()
-            self._checker.wait()
+        self._monitor.stop()
+        if not self._monitor.wait(5000):
+            self._monitor.terminate()
+            self._monitor.wait()
         QtGui.qApp.quit()
 
-    def signalIcon(self, level):
-        if level in range(1, 6):
-            return "://images/icons/icon_signal_0{}.png".format(level)
-        return "://images/icons/icon_signal_00.png"
+    def signalLevelChanged(self, level):
+        if self._notified:
+            return
 
-    def statusStr(self, params):
-        tip = []
+        iconName = "://images/icons/icon_signal_00.png"
+        if level in range(1, 6):
+            iconName = "://images/icons/icon_signal_0{}.png".format(level)
+
+        self.setIcon(QtGui.QIcon(iconName))
+
+    def needNotify(self, messageCount):
+        if not self._notified and messageCount > 0:
+            iconName = "://images/icons/unread_message.gif"
+            self.setIcon(QtGui.QIcon(iconName))
+            self._playSound()
+            self._notified = True
+        else:
+            self._notified = False
+
+    def statusChanged(self, status, operator):
+        if operator != "":
+            self.setToolTip("%s\n%s" % (status, operator))
+        else:
+            self.setToolTip(status)
+
+    def signalParamsChanged(self, params):
+        tip = [self.toolTip()]
         for (key, value) in params.items():
             if value:
                 tip.append(value)
-        return "\n".join(tip)
 
-    def updateStatus(self, params):
-        if params == self._lastStatus:
-            return
+        self.setToolTip("\n".join(tip))
 
-        self._lastStatus = params
-        icon = self.signalIcon(params.pop("level", 0))
-
-        if params.pop("need_notify", False):
-            # play notification sound
-            source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")
-            self.player.setCurrentSource(source)
-            self.player.play()
-            # and change tray icon
-            icon = "://images/icons/unread_message.gif"
-
-        self.setToolTip(self.statusStr(params))
-        self.setIcon(QtGui.QIcon(icon))
+    def _playSound(self):
+        source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")
+        self.player.setCurrentSource(source)
+        self.player.play()
 
     def _playerLog(self, newState, oldState):
         if newState == Phonon.ErrorState:
@@ -196,18 +210,43 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
 
 def main(ip, timeout):
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QtGui.QApplication(sys.argv)
-    checker = ModemSignalChecker(ip, timeout)
-    tray = ModemIndicator(checker)
-    checker.levelChanged.connect(tray.updateStatus)
-    checker.start()
-    tray.show()
+
+    monitor = ModemMonitor(ip, timeout)
+
+    trayIndicator = ModemIndicator(monitor)
+    monitor.levelChanged.connect(trayIndicator.signalLevelChanged)
+    monitor.statusChanged.connect(trayIndicator.statusChanged)
+    monitor.signalParamsChanged.connect(trayIndicator.signalParamsChanged)
+    monitor.unreadMessagesCountChanged.connect(trayIndicator.needNotify)
+
+    monitor.start()
+    trayIndicator.show()
 
     return app.exec_()
 
 
+def parseArgs():
+    parser = argparse.ArgumentParser(
+        description="hilink-tray - HiLink modems tray monitor",
+        add_help=True,
+        version="v3.0")
+
+    parser.add_argument(
+        "-t", "--timeout",
+        help="check modem params each [TIMEOUT] seconds",
+        type=int,
+        nargs="?", default=5)
+
+    parser.add_argument(
+        "-ip", "--ip",
+        help="modem's ip adress",
+        nargs="?", default="192.168.8.1")
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    args = docopt.docopt(__doc__, version="v2.0")
-    ip = args["--ip"]
-    timeout = int(args["--timeout"])
-    sys.exit(main(ip, timeout))
+    args = parseArgs()
+    sys.exit(main(args.ip, args.timeout))
