@@ -1,5 +1,6 @@
 all: install
 install:
+	pip install pyside
 	mkdir /opt/hilink-tray/
 	cp hilink-tray.py /opt/hilink-tray/
 	cp res_rc.py /opt/hilink-tray/
