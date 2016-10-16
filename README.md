@@ -7,4 +7,5 @@
  It is necessary to have Python 2.x and PIP. Install dependences with PIP and you can launch the program.
  
  If everything is correctly installed, you will be able to install dependences:
-	`pip install pyside`
+
+	pip install pyside
