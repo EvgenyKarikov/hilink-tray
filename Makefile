@@ -5,4 +5,4 @@ all:
 install:
 	install hilink-tray /usr/bin/hilink-tray
 uninstall:
-	rm -R /usr/bin/hilink-tray
+	rm -rf /usr/bin/hilink-tray
