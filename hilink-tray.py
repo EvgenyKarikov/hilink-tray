@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 # Copyright: 2016, Wasylews
 # Author: Wasylews
 # License: MIT
