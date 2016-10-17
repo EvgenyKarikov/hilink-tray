@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 # Copyright: 2016, Wasylews
 # Author: Wasylews
 # License: MIT
@@ -7,7 +8,6 @@ from __future__ import print_function
 import sys
 import signal
 import socket
-import res_rc
 import argparse
 from PySide import QtCore, QtGui
 from PySide.phonon import Phonon

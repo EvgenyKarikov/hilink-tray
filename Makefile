@@ -1,10 +1,9 @@
-all: install
+all:
+	head -n \-3 hilink-tray.py > hilink-tray
+	pyside-rcc res.qrc >> hilink-tray
+	tail -n 4 hilink-tray.py >> hilink-tray
 install:
-	pip install pyside
-	mkdir /opt/hilink-tray/
-	cp hilink-tray.py /opt/hilink-tray/
-	cp res_rc.py /opt/hilink-tray/
-	chmod 755 /opt/hilink-tray
-	ln -s /opt/hilink-tray/hilink-tray.py /usr/bin/hilink-tray
+
+	install hilink-tray /usr/bin/hilink-tray
 uninstall:
-	rm -R /opt/hilink-tray
+	rm -R /usr/bin/hilink-tray
