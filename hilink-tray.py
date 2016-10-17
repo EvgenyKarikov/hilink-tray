@@ -62,7 +62,7 @@ class ModemMonitor(QtCore.QThread):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
                  "21": "IS-95A", "22": "IS-95B", "23": "CDMA 1X", "24": "EV-DO Rev. 0", "25": "EV-DO Rev. A", "26": "EV-DO Rev. A", "27": "Hybrid CDMA 1X", "28": "Hybrid EV-DO Rev. 0", "29": "Hybrid EV-DO Rev. A", "30": "Hybrid EV-DO Rev. A", "31": "eHPRD Rel. 0", "32": "eHPRD Rel. A", "33": "eHPRD Rel. B", "34": "Hybrid eHPRD Rel. 0", "35": "Hybrid eHPRD Rel. A", "36": "Hybrid eHPRD Rel. B",
                  "41": "WCDMA", "42": "HSDPA", "43": "HSUPA", "44": "HSPA", "45": "HSPA+", "46": "DC-HSPA+",
-                 "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPDA", "64": "TD-HSPA", "65": "TD-HSPA+",
+                 "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA", "64": "TD-HSPA", "65": "TD-HSPA+",
                  "81": "802.16e",
                  "101": "LTE"}
         return types[xml.find("CurrentNetworkTypeEx").text]
