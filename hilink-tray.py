@@ -7,7 +7,6 @@ from __future__ import print_function
 import sys
 import signal
 import socket
-import res_rc
 import argparse
 from PySide import QtCore, QtGui
 from PySide.phonon import Phonon
@@ -15,9 +14,11 @@ from xml.etree import ElementTree
 from collections import OrderedDict
 
 try:
+    import res_rc
     from urllib2 import build_opener, URLError
     from urlparse import urljoin
 except ImportError:  # >= 3.x
+    import res3_rc
     from urllib.request import build_opener
     from urllib.error import URLError
     from urllib.parse import urljoin
@@ -64,7 +65,7 @@ class ModemMonitor(QtCore.QThread):
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
-                  "902": "Disconnected"}
+                  "902": "Disconnected", "903": "Disconnecting"}
         return states[xml.find("ConnectionStatus").text]
 
     def getOperator(self, xml):
@@ -138,7 +139,10 @@ class ModemMonitor(QtCore.QThread):
 class ModemIndicator(QtGui.QSystemTrayIcon):
     """Simple tray indicator"""
 
-    # is user already notified about unreaded messages or not
+    # store last message count
+    _lastMessageCount = 0
+
+    # is user notified or not
     _notified = False
 
     def __init__(self, monitor):
@@ -177,13 +181,19 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self.setIcon(QtGui.QIcon(iconName))
 
     def needNotify(self, messageCount):
-        if not self._notified and messageCount > 0:
+        if messageCount > 0:
+            if messageCount > self._lastMessageCount:
+                print("notify")
+                self._playSound()
+
             iconName = "://images/icons/unread_message.gif"
             self.setIcon(QtGui.QIcon(iconName))
-            self._playSound()
+
             self._notified = True
         else:
             self._notified = False
+
+        self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
         if operator != "":
@@ -230,8 +240,7 @@ def main(ip, timeout):
 def parseArgs():
     parser = argparse.ArgumentParser(
         description="hilink-tray - HiLink modems tray monitor",
-        add_help=True,
-        version="v3.0")
+        add_help=True)
 
     parser.add_argument(
         "-t", "--timeout",
@@ -243,6 +252,10 @@ def parseArgs():
         "-ip", "--ip",
         help="modem's ip adress",
         nargs="?", default="192.168.8.1")
+
+    parser.add_argument(
+        "-v", "--version",
+        action="version", version="%(prog)s 3.1")
 
     return parser.parse_args()
 
