@@ -1,5 +1,5 @@
 all:
-	head -n \-3 hilink-tray.py > hilink-tray
+	head -n \-3 hilink-tray.py | grep -v 'import res_rc' | grep -v 'import res3_rc' > hilink-tray
 	pyside-rcc res.qrc >> hilink-tray
 	tail -n 4 hilink-tray.py >> hilink-tray
 windows:
