@@ -79,16 +79,18 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
-        if status == "Connected":
+        if status == "No signal":
             self.connectAction.setDisabled(True)
-            self.disconnectAction.setEnabled(True)
-            self.rebootAction.setEnabled(True)
-            self._modem.start()
-        elif status == "Disconnected":
-            self.connectAction.setEnabled(True)
             self.disconnectAction.setDisabled(True)
             self.rebootAction.setDisabled(True)
-            self._modem.stop()
+        else:
+            self.rebootAction.setEnabled(True)
+            if status == "Connected":
+                self.connectAction.setDisabled(True)
+                self.disconnectAction.setEnabled(True)
+            elif status == "Disconnected":
+                self.connectAction.setEnabled(True)
+                self.disconnectAction.setDisabled(True)
 
         if operator != "":
             self.setToolTip("%s\n%s" % (status, operator))

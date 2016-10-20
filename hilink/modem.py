@@ -145,7 +145,7 @@ class Modem(QtCore.QObject):
             plmnXml = self._getXml("/api/net/current-plmn")
         except:
             self.levelChanged.emit(0)
-            self.statusChanged.emit("Disconnected", "")
+            self.statusChanged.emit("No signal", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
             self.levelChanged.emit(signalLevel)
