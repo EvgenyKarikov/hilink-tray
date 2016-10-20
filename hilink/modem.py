@@ -44,36 +44,31 @@ class Modem(QtCore.QObject):
         self._post("/api/device/control", msg)
 
     def _post(self, section, msg):
-        token = self._getPostToken()
-        self._opener.addheaders += [("__RequestVerificationToken", token)]
+        session, postToken = self._getTokens()
+        self._opener.addheaders += [("__RequestVerificationToken", postToken),
+                                    ("Cookie", session)]
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      data=msg).read()
         print("[Response]", response)
 
     def _getXml(self, section):
+        session = self._getTokens()[0]
+        self._opener.addheaders += [("Cookie", session)]
+
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      timeout=1).read()
         print("[Response]", response)
         return ElementTree.fromstring(response)
 
-    def _getPostToken(self):
-        """Get access token"""
+    def _getTokens(self):
+        """Get access tokens"""
         try:
             xml = self._getXml("/api/webserver/SesTokInfo")
         except Exception as e:
             print("[Error]", e)
-            return ""
+            return ("", "")
         else:
-            return xml.find("TokInfo").text
-
-    def _getSessionToken(self):
-        try:
-            xml = self._getXml("/api/webserver/SesTokInfo")
-        except Exception as e:
-            print("[Error]", e)
-            return ""
-        else:
-            return xml.find("SesInfo").text
+            return (xml.find("SesInfo").text, xml.find("TokInfo").text)
 
     def getSignalLevel(self, xml):
         return int(xml.find("SignalIcon").text)
@@ -171,9 +166,6 @@ class Modem(QtCore.QObject):
             self.signalParamsChanged.emit(params)
 
     def monitor(self):
-        session = self._getSessionToken()
-        self._opener.addheaders += [("Cookie", session)]
-
         self.monitorMessages()
         self.monitorStatus()
         self.monitorSignalParams()
