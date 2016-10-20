@@ -4,13 +4,10 @@ from collections import OrderedDict
 
 try:
     import hilink.res_rc
-    from cookielib import CookieJar
-    from urllib2 import build_opener, URLError, HTTPCookieProcessor
+    from urllib2 import build_opener, URLError
     from urlparse import urljoin
 except ImportError:  # >= 3.x
     import hilink.res3_rc
-    from http.cookie import CookieJar
-    from urllib.request import build_opener, HTTPCookieProcessor
     from urllib.error import URLError
     from urllib.parse import urljoin
 
@@ -27,8 +24,7 @@ class Modem(QtCore.QObject):
 
     def __init__(self, ip):
         super(Modem, self).__init__()
-        self._session = CookieJar()
-        self._opener = build_opener(HTTPCookieProcessor(self._session))
+        self._opener = build_opener()
         self._baseUrl = "http://{}".format(ip)
 
     def finish(self):
@@ -56,7 +52,7 @@ class Modem(QtCore.QObject):
 
     def _post(self, section, msg):
         token = self._getPostToken()
-        self._opener.addheaders.append(("__RequestVerificationToken", token))
+        self._opener.addheaders += [("__RequestVerificationToken", token)]
         self._opener.open(urljoin(self._baseUrl, section),
                           data=msg)
 
@@ -73,6 +69,14 @@ class Modem(QtCore.QObject):
             return ""
         else:
             return xml.find("TokInfo").text
+
+    def _getSessionToken(self):
+            try:
+                xml = self._getXml("/api/webserver/SesTokInfo")
+            except URLError:
+                return ""
+            else:
+                return xml.find("SesInfo").text
 
     def getSignalLevel(self, xml):
         return int(xml.find("SignalIcon").text)
@@ -167,6 +171,9 @@ class Modem(QtCore.QObject):
             self.signalParamsChanged.emit(params)
 
     def monitor(self):
+        session = self._getSessionToken()
+        self._opener.addheaders += [("Cookie", session)]
+
         self.monitorMessages()
         self.monitorStatus()
         self.monitorSignalParams()
