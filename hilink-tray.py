@@ -65,7 +65,6 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.connectAction.setText("Connect")
 
     def signalLevelChanged(self, level):
-        print(level)
         iconName = "://images/icons/icon_signal_00.png"
         if level in range(1, 6):
             iconName = "://images/icons/icon_signal_0{}.png".format(level)

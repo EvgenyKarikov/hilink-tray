@@ -1,3 +1,4 @@
+from __future__ import print_function
 from PySide import QtCore
 from xml.etree import ElementTree
 from collections import OrderedDict
@@ -45,30 +46,34 @@ class Modem(QtCore.QObject):
     def _post(self, section, msg):
         token = self._getPostToken()
         self._opener.addheaders += [("__RequestVerificationToken", token)]
-        self._opener.open(urljoin(self._baseUrl, section),
-                          data=msg)
+        response = self._opener.open(urljoin(self._baseUrl, section),
+                                     data=msg).read()
+        print("[Response]", response)
 
     def _getXml(self, section):
         response = self._opener.open(urljoin(self._baseUrl, section),
-                                     timeout=1)
-        return ElementTree.fromstring(response.read())
+                                     timeout=1).read()
+        print("[Response]", response)
+        return ElementTree.fromstring(response)
 
     def _getPostToken(self):
         """Get access token"""
         try:
             xml = self._getXml("/api/webserver/SesTokInfo")
-        except URLError:
+        except Exception as e:
+            print("[Error]", e)
             return ""
         else:
             return xml.find("TokInfo").text
 
     def _getSessionToken(self):
-            try:
-                xml = self._getXml("/api/webserver/SesTokInfo")
-            except URLError:
-                return ""
-            else:
-                return xml.find("SesInfo").text
+        try:
+            xml = self._getXml("/api/webserver/SesTokInfo")
+        except Exception as e:
+            print("[Error]", e)
+            return ""
+        else:
+            return xml.find("SesInfo").text
 
     def getSignalLevel(self, xml):
         return int(xml.find("SignalIcon").text)
@@ -125,8 +130,9 @@ class Modem(QtCore.QObject):
         try:
             notifyXml = self._getXml("/api/monitoring/check-notifications")
             messageCount = self.getUnreadMessageCount(notifyXml)
-        except:
+        except Exception as e:
             self.unreadMessagesCountChanged.emit(0)
+            print("[Error]", e)
         else:
             self.unreadMessagesCountChanged.emit(messageCount)
 
@@ -135,8 +141,9 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except:
+        except Exception as e:
             self.levelChanged.emit(0)
+            print("[Error]", e)
             self.statusChanged.emit("No signal", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
@@ -156,8 +163,9 @@ class Modem(QtCore.QObject):
         """Monitor signal parameters"""
         try:
             signalXml = self._getXml("/api/device/signal")
-        except:
+        except Exception as e:
             self.signalParamsChanged.emit({})
+            print("[Error]", e)
         else:
             params = self.getSignalParams(signalXml)
             self.signalParamsChanged.emit(params)
