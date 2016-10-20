@@ -129,11 +129,8 @@ def main(ip, timeout):
     timer.setInterval(timeout)
     timer.moveToThread(monitorThread)
 
-    monitorThread.started.connect(modem.start)
+    monitorThread.started.connect(timer.start)
     timer.timeout.connect(modem.monitor)
-
-    modem.started.connect(timer.start)
-    modem.stopped.connect(timer.stop)
 
     trayIndicator = ModemIndicator(modem)
     modem.levelChanged.connect(

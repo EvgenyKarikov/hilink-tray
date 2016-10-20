@@ -19,8 +19,6 @@ class Modem(QtCore.QObject):
     signalParamsChanged = QtCore.Signal(OrderedDict)
     unreadMessagesCountChanged = QtCore.Signal(int)
     finished = QtCore.Signal()
-    started = QtCore.Signal()
-    stopped = QtCore.Signal()
 
     def __init__(self, ip):
         super(Modem, self).__init__()
@@ -29,12 +27,6 @@ class Modem(QtCore.QObject):
 
     def finish(self):
         self.finished.emit()
-
-    def start(self):
-        self.started.emit()
-
-    def stop(self):
-        self.stopped.emit()
 
     def connect_(self):
         msg = """<?xml version="1.0" encoding="UTF-8"?><request><dataswitch>1</dataswitch></request>"""
