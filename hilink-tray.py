@@ -36,13 +36,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         menu = QtGui.QMenu()
 
         self.connectAction = QtGui.QAction("Connect", menu)
-        self.connectAction.triggered.connect(self._modem.connect_)
+        self.connectAction.triggered.connect(self.toggleConnect)
         menu.addAction(self.connectAction)
-
-        self.disconnectAction = QtGui.QAction("Disconnect", menu)
-        self.disconnectAction.triggered.connect(self._modem.disconnect)
-        self.disconnectAction.setDisabled(True)
-        menu.addAction(self.disconnectAction)
 
         self.rebootAction = QtGui.QAction("Reboot", menu)
         self.rebootAction.triggered.connect(self._modem.reboot)
@@ -60,6 +55,14 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def quit(self):
         self.hide()
         self._modem.finish()
+
+    def toggleConnect(self):
+        if self.connectAction.text() == "Connect":
+            self._modem.connect_()
+            self.connectAction.setText("Disconnect")
+        else:
+            self._modem.disconnect()
+            self.connectAction.setText("Connect")
 
     def signalLevelChanged(self, level):
         print(level)
@@ -81,16 +84,12 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def statusChanged(self, status, operator):
         if status == "No signal":
             self.connectAction.setDisabled(True)
-            self.disconnectAction.setDisabled(True)
-            self.rebootAction.setDisabled(True)
         else:
             self.rebootAction.setEnabled(True)
             if status == "Connected":
-                self.connectAction.setDisabled(True)
-                self.disconnectAction.setEnabled(True)
+                self.connectAction.setText("Disconnect")
             elif status == "Disconnected":
-                self.connectAction.setEnabled(True)
-                self.disconnectAction.setDisabled(True)
+                self.connectAction.setText("Connect")
 
         if operator != "":
             self.setToolTip("%s\n%s" % (status, operator))
