@@ -44,17 +44,11 @@ class Modem(QtCore.QObject):
         self._post("/api/device/control", msg)
 
     def _post(self, section, msg):
-        session, postToken = self._getTokens()
-        self._opener.addheaders += [("__RequestVerificationToken", postToken),
-                                    ("Cookie", session)]
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      data=msg).read()
         print("[Response]", response)
 
     def _getXml(self, section):
-        session = self._getTokens()[0]
-        self._opener.addheaders += [("Cookie", session)]
-
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      timeout=1).read()
         print("[Response]", response)
@@ -69,6 +63,11 @@ class Modem(QtCore.QObject):
             return ("", "")
         else:
             return (xml.find("SesInfo").text, xml.find("TokInfo").text)
+
+    def _updateTokens(self):
+        session, postToken = self._getTokens()
+        self._opener.addheaders += [("__RequestVerificationToken", postToken),
+                                    ("Cookie", session)]
 
     def getSignalLevel(self, xml):
         return int(xml.find("SignalIcon").text)
@@ -166,6 +165,7 @@ class Modem(QtCore.QObject):
             self.signalParamsChanged.emit(params)
 
     def monitor(self):
+        self._updateTokens()
         self.monitorMessages()
         self.monitorStatus()
         self.monitorSignalParams()
