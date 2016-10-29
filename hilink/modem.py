@@ -122,8 +122,7 @@ class Modem(QtCore.QObject):
             notifyXml = self._getXml("/api/monitoring/check-notifications")
             messageCount = self.getUnreadMessageCount(notifyXml)
         except URLError:
-            import random
-            self.unreadMessagesCountChanged.emit(random.randint(0, 100))
+            self.unreadMessagesCountChanged.emit(0)
         else:
             self.unreadMessagesCountChanged.emit(messageCount)
 
@@ -133,8 +132,7 @@ class Modem(QtCore.QObject):
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
         except URLError:
-            import random
-            self.levelChanged.emit(random.randint(0, 6))
+            self.levelChanged.emit(0)
             self.statusChanged.emit("No HiLink Detected", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)

@@ -25,9 +25,6 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     # store last message count
     _lastMessageCount = 0
 
-    # is user notified or not
-    _notified = False
-
     def __init__(self, modem):
         super(ModemIndicator, self).__init__()
         self._modem = modem
