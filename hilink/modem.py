@@ -9,6 +9,7 @@ try:
 except ImportError:  # >= 3.x
     from urllib.error import URLError
     from urllib.parse import urljoin
+    from urllib.request import build_opener
 
 
 class Modem(QtCore.QObject):
