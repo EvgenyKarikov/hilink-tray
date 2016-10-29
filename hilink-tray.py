@@ -37,11 +37,12 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 
         self.connectAction = QtGui.QAction("Connect", menu)
         self.connectAction.triggered.connect(self.toggleConnect)
+        self.connectAction.setVisible(False)
         menu.addAction(self.connectAction)
 
         self.rebootAction = QtGui.QAction("Reboot", menu)
         self.rebootAction.triggered.connect(self._modem.reboot)
-        self.rebootAction.setDisabled(True)
+        self.rebootAction.setVisible(False)
         menu.addAction(self.rebootAction)
 
         menu.addSeparator()
@@ -59,10 +60,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def toggleConnect(self):
         if self.connectAction.text() == "Connect":
             self._modem.connect_()
-            self.connectAction.setText("Disconnect")
         else:
             self._modem.disconnect()
-            self.connectAction.setText("Connect")
 
     def signalLevelChanged(self, level):
         iconName = "://images/icons/icon_signal_00.png"
@@ -81,14 +80,21 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
-        if status == "No signal":
-            self.connectAction.setDisabled(True)
-        else:
-            self.rebootAction.setEnabled(True)
-            if status == "Connected":
-                self.connectAction.setText("Disconnect")
-            elif status == "Disconnected":
-                self.connectAction.setText("Connect")
+        if status == "No HiLink Detected":
+            self.connectAction.setVisible(False)
+            self.rebootAction.setVisible(False)
+        elif status == "Connected":
+            self.connectAction.setVisible(True)
+            self.rebootAction.setVisible(True)
+            self.connectAction.setText("Disconnect")
+        elif status == "Disconnected":
+            self.connectAction.setVisible(True)
+            self.rebootAction.setVisible(True)
+            self.connectAction.setText("Connect")
+
+        if operator == "No Service":
+            self.connectAction.setVisible(False)
+            self.rebootAction.setVisible(True)
 
         if operator != "":
             self.setToolTip("%s\n%s" % (status, operator))

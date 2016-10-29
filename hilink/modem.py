@@ -51,26 +51,27 @@ class Modem(QtCore.QObject):
     def _getXml(self, section):
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      timeout=1).read()
-        print("[Response]", response)
         return ElementTree.fromstring(response)
 
     def _getTokens(self):
         """Get access tokens"""
         try:
             xml = self._getXml("/api/webserver/SesTokInfo")
-        except Exception as e:
-            print("[Error]", e)
+        except URLError:
             return ("", "")
         else:
             return (xml.find("SesInfo").text, xml.find("TokInfo").text)
 
     def _updateTokens(self):
         session, postToken = self._getTokens()
-        self._opener.addheaders += [("__RequestVerificationToken", postToken),
-                                    ("Cookie", session)]
+        self._opener.addheaders = [("__RequestVerificationToken", postToken),
+                                   ("Cookie", session)]
 
     def getSignalLevel(self, xml):
-        return int(xml.find("SignalIcon").text)
+        try:
+            return int(xml.find("SignalIcon").text)
+        except AttributeError:
+            return 0
 
     def getNetworkType(self, xml):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
@@ -124,9 +125,8 @@ class Modem(QtCore.QObject):
         try:
             notifyXml = self._getXml("/api/monitoring/check-notifications")
             messageCount = self.getUnreadMessageCount(notifyXml)
-        except Exception as e:
+        except URLError:
             self.unreadMessagesCountChanged.emit(0)
-            print("[Error]", e)
         else:
             self.unreadMessagesCountChanged.emit(messageCount)
 
@@ -135,10 +135,9 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except Exception as e:
+        except URLError:
             self.levelChanged.emit(0)
-            print("[Error]", e)
-            self.statusChanged.emit("No signal", "")
+            self.statusChanged.emit("No HiLink Detected", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
             self.levelChanged.emit(signalLevel)
@@ -157,9 +156,8 @@ class Modem(QtCore.QObject):
         """Monitor signal parameters"""
         try:
             signalXml = self._getXml("/api/device/signal")
-        except Exception as e:
+        except URLError:
             self.signalParamsChanged.emit({})
-            print("[Error]", e)
         else:
             params = self.getSignalParams(signalXml)
             self.signalParamsChanged.emit(params)
