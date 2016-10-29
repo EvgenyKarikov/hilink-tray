@@ -92,7 +92,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
             self.connectAction.setText("Connect")
 
-        if operator == "No Service":
+        if operator == "No Service" or status in ["Connecting", "Disconnecting"]:
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(True)
 

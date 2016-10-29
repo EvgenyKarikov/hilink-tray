@@ -60,7 +60,7 @@ class Modem(QtCore.QObject):
         except URLError:
             return ("", "")
         else:
-            return (xml.find("SesInfo").text, xml.find("TokInfo").text)
+            return (xml.findtext("SesInfo", ""), xml.findtext("TokInfo", ""))
 
     def _updateTokens(self):
         session, postToken = self._getTokens()
@@ -68,10 +68,7 @@ class Modem(QtCore.QObject):
                                    ("Cookie", session)]
 
     def getSignalLevel(self, xml):
-        try:
-            return int(xml.find("SignalIcon").text)
-        except AttributeError:
-            return 0
+        return int(xml.findtext("SignalIcon", "0"))
 
     def getNetworkType(self, xml):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
@@ -87,12 +84,12 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        return types[xml.find("CurrentNetworkTypeEx").text]
+        return types[xml.findtext("CurrentNetworkTypeEx", "")]
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
                   "902": "Disconnected", "903": "Disconnecting"}
-        return states[xml.find("ConnectionStatus").text]
+        return states[xml.findtext("ConnectionStatus", "")]
 
     def getOperator(self, xml):
         shortName = xml.find("ShortName")
