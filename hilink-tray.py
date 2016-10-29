@@ -100,7 +100,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
 
         if operator != "":
-            self.setToolTip("%s\n%s" % (status, operator))
+            self.setToolTip("%s\n%s" % (operator, status))
         else:
             self.setToolTip(status)
 
