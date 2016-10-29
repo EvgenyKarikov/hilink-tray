@@ -25,6 +25,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     # store last message count
     _lastMessageCount = 0
 
+    _notified = False
+
     def __init__(self, modem):
         super(ModemIndicator, self).__init__()
         self._modem = modem
@@ -67,11 +69,17 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self._modem.disconnect()
 
     def signalLevelChanged(self, level):
+        if self._notified:
+            return
+
         iconName = "://images/icons/icon_signal_00.png"
         if level in range(1, 6):
             iconName = "://images/icons/icon_signal_0{}.png".format(level)
 
         self.setIcon(QtGui.QIcon(iconName))
+
+    def _abortNotification(self):
+        self._notified = False
 
     def needNotify(self, messageCount):
         if messageCount > 0:
@@ -79,6 +87,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
                 self._playSound()
             iconName = "://images/icons/unread_message.png"
             self.setIcon(QtGui.QIcon(iconName))
+            self._notified = True
+            QtCore.QTimer.singleShot(1000, self._abortNotification)
 
         self._lastMessageCount = messageCount
 
