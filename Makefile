@@ -4,6 +4,9 @@ deb:
 	cp -rf hilink-tray.py hilink-tray-4.0/usr/bin/hilink-tray
 	dpkg --build hilink-tray-4.0 Release/hilink-tray-4.0_all.deb
 
+pacman:
+	makepkg -sr
+
 windows:
 	wine C:/Python27/Scripts/pyinstaller -w hilink-tray.py
 	mkdir -p dist/hilink-tray/phonon_backend
