@@ -66,7 +66,7 @@ class Modem(QtCore.QObject):
 
     def _updateTokens(self):
         session, postToken = self._getTokens()
-        self._opener.addheaders += [("__RequestVerificationToken", postToken),
+        self._opener.addheaders = [("__RequestVerificationToken", postToken),
                                     ("Cookie", session)]
 
     def getSignalLevel(self, xml):
@@ -135,10 +135,10 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except Exception as e:
+        except URLError as e:
             self.levelChanged.emit(0)
             print("[Error]", e)
-            self.statusChanged.emit("No signal", "")
+            self.statusChanged.emit("No HiLink Detected", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
             self.levelChanged.emit(signalLevel)
