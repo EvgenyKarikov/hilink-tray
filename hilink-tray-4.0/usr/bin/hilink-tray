@@ -14,9 +14,9 @@ from hilink.modem import Modem
 
 # load resources based on interpreter version
 if sys.hexversion >= 0x3000000:
-    import hilink.res3_rc
+    import res3_rc
 else:
-    import hilink.res_rc
+    import res_rc
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):

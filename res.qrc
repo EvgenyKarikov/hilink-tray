@@ -1,6 +1,6 @@
 <RCC>
   <qresource prefix="images">
-    <file>icons/unread_message.gif</file>
+    <file>icons/unread_message.png</file>
     <file>icons/icon_signal_00.png</file>
     <file>icons/icon_signal_01.png</file>
     <file>icons/icon_signal_02.png</file>
@@ -10,6 +10,5 @@
   </qresource>
   <qresource prefix="sounds">
     <file>sounds/unread_message.wav</file>
-    <file>sounds/unread_message.mp3</file>
   </qresource>
 </RCC>
