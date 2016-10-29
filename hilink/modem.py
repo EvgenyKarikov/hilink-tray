@@ -88,7 +88,7 @@ class Modem(QtCore.QObject):
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
                   "902": "Disconnected", "903": "Disconnecting"}
-        return states[xml.findtext("ConnectionStatus", "")]
+        return states[xml.findtext("ConnectionStatus", "902")]
 
     def getOperator(self, xml):
         shortName = xml.find("ShortName")
