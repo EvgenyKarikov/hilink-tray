@@ -1,13 +1,13 @@
 <RCC>
-  <qresource prefix="images">
-    <file>icons/icon_signal_00.png</file>
-    <file>icons/icon_signal_01.png</file>
-    <file>icons/icon_signal_02.png</file>
-    <file>icons/icon_signal_03.png</file>
-    <file>icons/icon_signal_04.png</file>
-    <file>icons/icon_signal_05.png</file>
+  <qresource>
+    <file>images/icon_signal_00.png</file>
+    <file>images/icon_signal_01.png</file>
+    <file>images/icon_signal_02.png</file>
+    <file>images/icon_signal_03.png</file>
+    <file>images/icon_signal_04.png</file>
+    <file>images/icon_signal_05.png</file>
   </qresource>
-  <qresource prefix="sounds">
+  <qresource>
     <file>sounds/unread_message.wav</file>
   </qresource>
 </RCC>

@@ -70,9 +70,9 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self._modem.disconnect()
 
     def signalLevelChanged(self, level):
-        iconName = "://images/icons/icon_signal_00.png"
+        iconName = "://images/icon_signal_00.png"
         if level in range(1, 6):
-            iconName = "://images/icons/icon_signal_0{}.png".format(level)
+            iconName = "://images/icon_signal_0{}.png".format(level)
 
         self.setIcon(QtGui.QIcon(iconName))
 
@@ -117,7 +117,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         self.setToolTip("\n".join(filter(None, self._status)))
 
     def _playSound(self):
-        source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")
+        source = Phonon.MediaSource("://sounds/unread_message.wav")
         self.player.setCurrentSource(source)
         self.player.play()
 
