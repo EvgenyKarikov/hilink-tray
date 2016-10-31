@@ -1,8 +1,0 @@
-Package: hilink-tray
-Version: 4.0
-Section: admin
-Maintainer: Wasylews <ua.wasylews@gmail.com>
-Architecture: all
-Depends: python (>= 2.7), python-pyside
-Description: hilink-tray is program
- Displays signal level in a tray at Huawei modems on HiLink firmware

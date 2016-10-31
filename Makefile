@@ -1,12 +1,3 @@
-deb:
-	mkdir -p hilink-tray-4.0/usr/lib/python2.7/dist-packages hilink-tray-4.0/usr/bin
-	cp -rf hilink hilink-tray-4.0/usr/lib/python2.7/dist-packages
-	cp -f hilink-tray.py hilink-tray-4.0/usr/bin/hilink-tray
-	dpkg --build hilink-tray-4.0 hilink-tray-4.0_all.deb
-
-pacman:
-	makepkg -sr
-
 windows:
 	wine C:/Python27/Scripts/pyinstaller -w hilink-tray.py
 	mkdir -p dist/hilink-tray/phonon_backend
@@ -23,12 +14,6 @@ install:
 
 uninstall:
 	rm -rf /usr/bin/hilink-tray /usr/lib/python2.7/dist-packages/hilink
-
-deb-clean:
-	rm -rf hilink-tray-4.0/usr
-
-pacman-clean:
-	rm -rf hilink-tray pkg src
 
 windows-clean:
 	rm -rf build *.spec
