@@ -2,6 +2,7 @@ from __future__ import print_function
 from PySide import QtCore
 from xml.etree import ElementTree
 from collections import OrderedDict
+import socket
 
 try:
     from urllib2 import build_opener, URLError
@@ -50,6 +51,7 @@ class Modem(QtCore.QObject):
     def _getXml(self, section):
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      timeout=1).read()
+
         return ElementTree.fromstring(response)
 
     def _getTokens(self):
@@ -83,7 +85,7 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        return types[xml.findtext("CurrentNetworkTypeEx", "")]
+        return types[xml.findtext("CurrentNetworkTypeEx", "0")]
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
@@ -106,7 +108,7 @@ class Modem(QtCore.QObject):
         values = OrderedDict()
 
         for key in params:
-            value = xml.find(key).text
+            value = xml.findtext(key, "")
             if value:
                 values[key] = "{key}: {val}".format(key=key.upper(),
                                                     val=value)
@@ -131,7 +133,7 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except URLError:
+        except URLError, socket.timeout:
             self.levelChanged.emit(0)
             self.statusChanged.emit("No HiLink Detected", "")
         else:

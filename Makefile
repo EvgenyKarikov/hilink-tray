@@ -25,7 +25,7 @@ uninstall:
 	rm -rf /usr/bin/hilink-tray /usr/lib/python2.7/dist-packages/hilink
 
 deb-clean:
-	rm -rf hilink-tray-4.0/usr
+	rm hilink-tray-4.0_all.deb
 
 pacman-clean:
 	rm -rf hilink-tray pkg src

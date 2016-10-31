@@ -14,9 +14,9 @@ from hilink.modem import Modem
 
 # load resources based on interpreter version
 if sys.hexversion >= 0x3000000:
-    import res3_rc
+    import hilink.res3_rc
 else:
-    import res_rc
+    import hilink.res_rc
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
@@ -25,8 +25,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     # store last message count
     _lastMessageCount = 0
 
-    # is user notified or not
-    _notified = False
+    # status, messages, params
+    _status = [""] * 3
 
     def __init__(self, modem):
         super(ModemIndicator, self).__init__()
@@ -80,9 +80,9 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         if messageCount > 0:
             if messageCount > self._lastMessageCount:
                 self._playSound()
-            iconName = "://images/icons/unread_message.png"
-            self.setIcon(QtGui.QIcon(iconName))
-
+                self._status[1] = "New Messages: %d" % messageCount
+        else:
+            self._status[1] = ""
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
@@ -98,21 +98,23 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
             self.connectAction.setText("Connect")
 
-        if operator == "No Service" or status in ["Connecting", "Disconnecting"]:
+        if (operator == "No Service" or
+                status in ["Connecting", "Disconnecting"]):
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(True)
 
         if operator != "":
-            self.setToolTip("%s\n%s" % (status, operator))
+            self._status[0] = "%s\n%s" % (operator, status)
         else:
-            self.setToolTip(status)
+            self._status[0] = status
 
     def signalParamsChanged(self, params):
-        tip = [self.toolTip()]
+        tip = []
         for value in params.values():
             tip.append(value)
 
-        self.setToolTip("\n".join(tip))
+        self._status[2] = "\n".join(tip)
+        self.setToolTip("\n".join(filter(None, self._status)))
 
     def _playSound(self):
         source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")

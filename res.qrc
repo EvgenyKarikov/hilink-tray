@@ -1,6 +1,5 @@
 <RCC>
   <qresource prefix="images">
-    <file>icons/unread_message.png</file>
     <file>icons/icon_signal_00.png</file>
     <file>icons/icon_signal_01.png</file>
     <file>icons/icon_signal_02.png</file>

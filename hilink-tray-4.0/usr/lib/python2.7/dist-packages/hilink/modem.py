@@ -2,6 +2,7 @@ from __future__ import print_function
 from PySide import QtCore
 from xml.etree import ElementTree
 from collections import OrderedDict
+import socket
 
 try:
     from urllib2 import build_opener, URLError
@@ -9,6 +10,7 @@ try:
 except ImportError:  # >= 3.x
     from urllib.error import URLError
     from urllib.parse import urljoin
+    from urllib.request import build_opener
 
 
 class Modem(QtCore.QObject):
@@ -49,6 +51,7 @@ class Modem(QtCore.QObject):
     def _getXml(self, section):
         response = self._opener.open(urljoin(self._baseUrl, section),
                                      timeout=1).read()
+
         return ElementTree.fromstring(response)
 
     def _getTokens(self):
@@ -82,12 +85,12 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        return types[xml.findtext("CurrentNetworkTypeEx", "")]
+        return types[xml.findtext("CurrentNetworkTypeEx", "0")]
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
                   "902": "Disconnected", "903": "Disconnecting"}
-        return states[xml.findtext("ConnectionStatus", "")]
+        return states[xml.findtext("ConnectionStatus", "902")]
 
     def getOperator(self, xml):
         shortName = xml.find("ShortName")
@@ -105,7 +108,7 @@ class Modem(QtCore.QObject):
         values = OrderedDict()
 
         for key in params:
-            value = xml.find(key).text
+            value = xml.findtext(key, "")
             if value:
                 values[key] = "{key}: {val}".format(key=key.upper(),
                                                     val=value)
@@ -121,8 +124,7 @@ class Modem(QtCore.QObject):
             notifyXml = self._getXml("/api/monitoring/check-notifications")
             messageCount = self.getUnreadMessageCount(notifyXml)
         except URLError:
-            import random
-            self.unreadMessagesCountChanged.emit(random.randint(0, 100))
+            self.unreadMessagesCountChanged.emit(0)
         else:
             self.unreadMessagesCountChanged.emit(messageCount)
 
@@ -131,9 +133,8 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except URLError:
-            import random
-            self.levelChanged.emit(random.randint(0, 6))
+        except URLError, socket.timeout:
+            self.levelChanged.emit(0)
             self.statusChanged.emit("No HiLink Detected", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
