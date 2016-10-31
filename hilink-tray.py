@@ -25,7 +25,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     # store last message count
     _lastMessageCount = 0
 
-    _notified = False
+    # status, messages, params
+    _status = [""] * 3
 
     def __init__(self, modem):
         super(ModemIndicator, self).__init__()
@@ -69,27 +70,19 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self._modem.disconnect()
 
     def signalLevelChanged(self, level):
-        if self._notified:
-            return
-
         iconName = "://images/icons/icon_signal_00.png"
         if level in range(1, 6):
             iconName = "://images/icons/icon_signal_0{}.png".format(level)
 
         self.setIcon(QtGui.QIcon(iconName))
 
-    def _abortNotification(self):
-        self._notified = False
-
     def needNotify(self, messageCount):
         if messageCount > 0:
             if messageCount > self._lastMessageCount:
                 self._playSound()
-            iconName = "://images/icons/unread_message.png"
-            self.setIcon(QtGui.QIcon(iconName))
-            self._notified = True
-            QtCore.QTimer.singleShot(1000, self._abortNotification)
-
+                self._status[1] = "New Messages: %d" % messageCount
+        else:
+            self._status[1] = ""
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
@@ -105,21 +98,23 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
             self.connectAction.setText("Connect")
 
-        if operator == "No Service" or status in ["Connecting", "Disconnecting"]:
+        if (operator == "No Service" or
+                status in ["Connecting", "Disconnecting"]):
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(True)
 
         if operator != "":
-            self.setToolTip("%s\n%s" % (operator, status))
+            self._status[0] = "%s\n%s" % (operator, status)
         else:
-            self.setToolTip(status)
+            self._status[0] = status
 
     def signalParamsChanged(self, params):
-        tip = [self.toolTip()]
+        tip = []
         for value in params.values():
             tip.append(value)
 
-        self.setToolTip("\n".join(tip))
+        self._status[2] = "\n".join(tip)
+        self.setToolTip("\n".join(filter(None, self._status)))
 
     def _playSound(self):
         source = Phonon.MediaSource("://sounds/sounds/unread_message.wav")
