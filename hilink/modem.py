@@ -133,7 +133,7 @@ class Modem(QtCore.QObject):
         try:
             statusXml = self._getXml("/api/monitoring/status")
             plmnXml = self._getXml("/api/net/current-plmn")
-        except URLError, socket.timeout:
+        except (URLError, socket.timeout):
             self.levelChanged.emit(0)
             self.statusChanged.emit("No HiLink Detected", "")
         else:
