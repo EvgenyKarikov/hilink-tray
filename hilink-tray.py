@@ -80,7 +80,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         if messageCount > 0:
             if messageCount > self._lastMessageCount:
                 self._playSound()
-                self._status[1] = "New Messages: %d" % messageCount
+            self._status[1] = "New Messages: %d" % messageCount
         else:
             self._status[1] = ""
         self._lastMessageCount = messageCount
