@@ -58,7 +58,7 @@ class Modem(QtCore.QObject):
         """Get access tokens"""
         try:
             xml = self._getXml("/api/webserver/SesTokInfo")
-        except URLError:
+        except URLError, socket.timeout:
             return ("", "")
         else:
             return (xml.findtext("SesInfo", ""), xml.findtext("TokInfo", ""))
