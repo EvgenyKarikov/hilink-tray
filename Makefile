@@ -1,3 +1,10 @@
+res:
+	pyside-rcc -o hilink/res_rc.py res.qrc
+	pyside-rcc -o hilink/res3_rc.py res.qrc -py3
+
+clean:
+	rm -rf hilink/*.pyc
+
 windows:
 	wine C:/Python27/Scripts/pyinstaller -w hilink-tray.py
 	mkdir -p dist/hilink-tray/phonon_backend
