@@ -6,12 +6,12 @@ clean:
 	rm -rf hilink/*.pyc
 
 windows:
-	wine C:/Python27/Scripts/pyinstaller -w hilink-tray.py
+	wine C:/Python27/Scripts/pyinstaller -w --noupx hilink-tray.py
 	mkdir -p dist/hilink-tray/phonon_backend
 	cp -rf ~/.wine/drive_c/Python27/Lib/site-packages/PySide/plugins/phonon_backend/phonon_ds94.dll dist/hilink-tray/phonon_backend
 
 windows-dbg:
-	wine C:/Python27/Scripts/pyinstaller hilink-tray.py
+	wine C:/Python27/Scripts/pyinstaller --noupx hilink-tray.py
 	mkdir -p dist/hilink-tray/phonon_backend
 	cp -rf ~/.wine/drive_c/Python27/Lib/site-packages/PySide/plugins/phonon_backend/phonon_ds94.dll dist/hilink-tray/phonon_backend
 
@@ -23,4 +23,4 @@ uninstall:
 	rm -rf /usr/bin/hilink-tray /usr/lib/python2.7/dist-packages/hilink
 
 windows-clean:
-	rm -rf build *.spec
+	rm -rf build dist *.spec
