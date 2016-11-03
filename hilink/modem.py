@@ -71,7 +71,7 @@ class Modem(QtCore.QObject):
     def getSignalLevel(self, xml):
         return int(xml.findtext("SignalIcon", "0"))
 
-    def getNetworkType(self, xml):
+    def getNetworkTypeEx(self, xml):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
                  "21": "IS-95A", "22": "IS-95B", "23": "CDMA 1X",
                  "24": "EV-DO Rev. 0", "25": "EV-DO Rev. A",
@@ -85,8 +85,16 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        res = xml.findtext("CurrentNetworkTypeEx") or "0"
+        res = xml.findtext("CurrentNetworkTypeEx", 0)
+        return types[res] if res != "" else None
+
+    def getNetworkTypeCur(self, xml):
+        types = {}
+        res = xml.findtext("CurrentNetworkType")
         return types[res]
+
+    def getNetworkType(self, xml):
+        return getNetworkTypeEx(xml) or getNetworkTypeCur(xml)
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
