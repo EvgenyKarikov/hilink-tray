@@ -49,10 +49,13 @@ class Modem(QtCore.QObject):
         print("[Response]", response)
 
     def _getXml(self, section):
-        response = self._opener.open(urljoin(self._baseUrl, section),
-                                     timeout=1).read()
-
-        return ElementTree.fromstring(response)
+        try:
+            response = self._opener.open(urljoin(self._baseUrl, section),
+                                         timeout=1).read()
+        except (URLError, socket.timeout):
+            return ElementTree.fromstring('<error><code>100004</code><message></message></error>')
+        else:
+            return ElementTree.fromstring(response)
 
     def _getTokens(self):
         """Get access tokens"""
@@ -130,7 +133,11 @@ class Modem(QtCore.QObject):
 
     def getUnreadMessageCount(self, xml):
         """Get number of unreaded messages"""
-        return int(xml.find("UnreadMessage").text)
+        unreadMessage = xml.find("UnreadMessage")
+        if unreadMessage is not None:
+            return unreadMessage.text
+        else:
+            return ""
 
     def monitorMessages(self):
         """Monitor count of unreaded messages"""
