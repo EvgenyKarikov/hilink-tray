@@ -1,6 +1,1 @@
 *.pyc
-*.deb
-*.tar.gz
-*.exe
-build/
-dist/
