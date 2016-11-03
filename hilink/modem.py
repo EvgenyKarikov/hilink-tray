@@ -85,7 +85,8 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        return types[xml.findtext("CurrentNetworkTypeEx", "0")]
+        res = xml.findtext("CurrentNetworkTypeEx") or "0"
+        return types[res]
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
@@ -154,7 +155,7 @@ class Modem(QtCore.QObject):
         """Monitor signal parameters"""
         try:
             signalXml = self._getXml("/api/device/signal")
-        except URLError:
+        except URLError, socket.timeout:
             self.signalParamsChanged.emit({})
         else:
             params = self.getSignalParams(signalXml)
