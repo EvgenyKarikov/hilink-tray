@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['hilink-tray.py'],
+a = Analysis(['hilink-tray\\hilink-tray.py'],
              pathex=['Z:\\home\\ilya\\hilink-tray'],
              binaries=[('C:\\Python27\\lib\\site-packages\\PySide\\plugins\\phonon_backend\\phonon_ds94.dll', 'qt4_plugins\\phonon_backend')],
              datas=None,
