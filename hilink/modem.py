@@ -58,7 +58,7 @@ class Modem(QtCore.QObject):
         """Get access tokens"""
         try:
             xml = self._getXml("/api/webserver/SesTokInfo")
-        except URLError, socket.timeout:
+        except (URLError, socket.timeout):
             return ("", "")
         else:
             return (xml.findtext("SesInfo", ""), xml.findtext("TokInfo", ""))
@@ -69,7 +69,7 @@ class Modem(QtCore.QObject):
                                    ("Cookie", session)]
 
     def getSignalLevel(self, xml):
-        return int(xml.findtext("SignalIcon", "0"))
+        return int(xml.findtext("SignalIcon") or "0")
 
     def getNetworkTypeEx(self, xml):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
@@ -85,7 +85,7 @@ class Modem(QtCore.QObject):
                  "61": "TD-SCDMA", "62": "TD-HSDPA", "63": "TD-HSUPA",
                  "64": "TD-HSPA", "65": "TD-HSPA+", "81": "802.16e",
                  "101": "LTE"}
-        res = xml.findtext("CurrentNetworkTypeEx", 0)
+        res = xml.findtext("CurrentNetworkTypeEx", "0")
         return types[res] if res != "" else None
 
     def getNetworkTypeCur(self, xml):
