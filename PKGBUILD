@@ -11,7 +11,7 @@ source=("git://github.com/ilya-fedin/hilink-tray.git")
 md5sums=('SKIP')
 
 package() {
-  cd "$pkgnamr"
+  cd "$pkgname"
   
   mkdir -p "${pkgdir}"/usr/lib/python2.7/dist-packages "${pkgdir}"/usr/bin
   

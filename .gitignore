@@ -1,2 +1,5 @@
 *.pyc
-*.tar.gz
+*.tar.xz
+hilink-tray/
+pkg/
+src/
