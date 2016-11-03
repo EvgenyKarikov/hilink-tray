@@ -75,9 +75,9 @@ class Modem(QtCore.QObject):
         types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
                  "21": "IS-95A", "22": "IS-95B", "23": "CDMA 1X",
                  "24": "EV-DO Rev. 0", "25": "EV-DO Rev. A",
-                 "26": "EV-DO Rev. A", "27": "Hybrid CDMA 1X",
+                 "26": "EV-DO Rev. B", "27": "Hybrid CDMA 1X",
                  "28": "Hybrid EV-DO Rev. 0", "29": "Hybrid EV-DO Rev. A",
-                 "30": "Hybrid EV-DO Rev. A", "31": "eHPRD Rel. 0",
+                 "30": "Hybrid EV-DO Rev. B", "31": "eHPRD Rel. 0",
                  "32": "eHPRD Rel. A", "33": "eHPRD Rel. B",
                  "34": "Hybrid eHPRD Rel. 0", "35": "Hybrid eHPRD Rel. A",
                  "36": "Hybrid eHPRD Rel. B", "41": "WCDMA", "42": "HSDPA",
@@ -89,7 +89,7 @@ class Modem(QtCore.QObject):
         return types[res] if res != "" else None
 
     def getNetworkTypeCur(self, xml):
-        types = {}
+        types = {"0": "No Service","1": "GSM", "2": "GPRS", "3": "EDGE","4": "WCDMA", "5": "HSDPA", "6": "HSUPA", "7": "HSPA", "8": "TD-SCDMA", "9": "HSPA+", "10": "EV-DO Rev. 0", "11": "EV-DO Rev. A", "12": "EV-DO Rev. B", "13": "1XRTT", "14": "UMB", "15": "1XEVDV", "16": "3XRTT", "17": "HSPA+ 64QAM", "18": "HSPA+ MIMO"}
         res = xml.findtext("CurrentNetworkType")
         return types[res]
 
