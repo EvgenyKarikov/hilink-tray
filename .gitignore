@@ -2,6 +2,5 @@
 *.deb
 *.tar.gz
 *.exe
-*.spec
 build/
 dist/
