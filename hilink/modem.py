@@ -89,12 +89,17 @@ class Modem(QtCore.QObject):
         return types[res] if res != "" else None
 
     def getNetworkTypeCur(self, xml):
-        types = {"0": "No Service","1": "GSM", "2": "GPRS", "3": "EDGE","4": "WCDMA", "5": "HSDPA", "6": "HSUPA", "7": "HSPA", "8": "TD-SCDMA", "9": "HSPA+", "10": "EV-DO Rev. 0", "11": "EV-DO Rev. A", "12": "EV-DO Rev. B", "13": "1XRTT", "14": "UMB", "15": "1XEVDV", "16": "3XRTT", "17": "HSPA+ 64QAM", "18": "HSPA+ MIMO"}
+        types = {"0": "No Service", "1": "GSM", "2": "GPRS", "3": "EDGE",
+                 "4": "WCDMA", "5": "HSDPA", "6": "HSUPA", "7": "HSPA",
+                 "8": "TD-SCDMA", "9": "HSPA+", "10": "EV-DO Rev. 0",
+                 "11": "EV-DO Rev. A", "12": "EV-DO Rev. B",
+                 "13": "1XRTT", "14": "UMB", "15": "1XEVDV",
+                 "16": "3XRTT", "17": "HSPA+ 64QAM", "18": "HSPA+ MIMO"}
         res = xml.findtext("CurrentNetworkType")
         return types[res]
 
     def getNetworkType(self, xml):
-        return getNetworkTypeEx(xml) or getNetworkTypeCur(xml)
+        return self.getNetworkTypeEx(xml) or self.getNetworkTypeCur(xml)
 
     def getStatus(self, xml):
         states = {"900": "Connecting", "901": "Connected",
