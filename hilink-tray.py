@@ -80,13 +80,13 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         if messageCount > 0:
             if messageCount > self._lastMessageCount:
                 self._playSound()
-            self._status[1] = "New Messages: %d" % messageCount
+            self._status[1] = "New messages: %d" % messageCount
         else:
             self._status[1] = ""
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
-        if status == "No HiLink Detected":
+        if status == "Modem offline":
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(False)
         elif status == "Connected":
@@ -98,8 +98,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
             self.connectAction.setText("Connect")
 
-        if (operator == "No Service" or
-                status in ["Connecting", "Disconnecting"]):
+        if (operator == "No service" or
+                status in ["Connecting...", "Disconnecting..."]):
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(True)
 
