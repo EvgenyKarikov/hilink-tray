@@ -135,7 +135,7 @@ class Modem(QtCore.QObject):
         """Get number of unreaded messages"""
         unreadMessage = xml.find("UnreadMessage")
         if unreadMessage is not None:
-            return unreadMessage.text
+            return int(unreadMessage.text)
         else:
             return ""
 
@@ -156,7 +156,7 @@ class Modem(QtCore.QObject):
             plmnXml = self._getXml("/api/net/current-plmn")
         except (URLError, socket.timeout):
             self.levelChanged.emit(0)
-            self.statusChanged.emit("No HiLink Detected", "")
+            self.statusChanged.emit("Modem offline", "")
         else:
             signalLevel = self.getSignalLevel(statusXml)
             self.levelChanged.emit(signalLevel)
