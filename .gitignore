@@ -1,5 +1,5 @@
 *.pyc
-*.tar.xz
+*.tar.gz
 hilink-tray/
 pkg/
 src/
