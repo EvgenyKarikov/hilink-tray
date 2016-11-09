@@ -12,7 +12,8 @@ md5sums=('SKIP')
 
 package() {
   cd "$pkgname"
-  mkdir -p "${pkgdir}"/usr/lib/python2.7/dist-packages "${pkgdir}"/usr/bin
-  cp -rf hilink "${pkgdir}"/usr/lib/python2.7/dist-packages
-  cp -rf hilink-tray.py "${pkgdir}"/usr/bin/hilink-tray
+  mkdir -p "${pkgdir}"/usr/lib/python2.7/dist-packages "${pkgdir}"/usr/bin "${pkgdir}"/usr/share/licenses/hilink-tray
+  cp -R hilink "${pkgdir}"/usr/lib/python2.7/dist-packages
+  cp hilink-tray.py "${pkgdir}"/usr/bin/hilink-tray
+  cp LICENSE "${pkgdir}"/usr/share/licenses/hilink-tray
 }
