@@ -137,7 +137,7 @@ class Modem(QtCore.QObject):
         if unreadMessage is not None:
             return int(unreadMessage.text)
         else:
-            return ""
+            return 0
 
     def monitorMessages(self):
         """Monitor count of unreaded messages"""
