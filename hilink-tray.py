@@ -126,7 +126,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             print(self.player.errorString())
 
 
-def main(ip):
+def main(ip, timeout):
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QtGui.QApplication(sys.argv)
 
@@ -138,6 +138,7 @@ def main(ip):
     monitorThread.finished.connect(app.quit)
 
     timer = QtCore.QTimer()
+    timer.setInterval(timeout)
     timer.moveToThread(monitorThread)
 
     monitorThread.started.connect(timer.start)
@@ -165,6 +166,12 @@ def parseArgs():
         add_help=True)
 
     parser.add_argument(
+        "-t", "--timeout",
+        help="check modem params each [TIMEOUT] seconds",
+        type=int,
+        nargs="?", default=5)
+
+    parser.add_argument(
         "-ip", "--ip",
         help="modem's ip adress",
         nargs="?", default="192.168.8.1")
@@ -178,4 +185,4 @@ def parseArgs():
 
 if __name__ == '__main__':
     args = parseArgs()
-    sys.exit(main(args.ip))
+    sys.exit(main(args.ip, args.timeout * 1000))
