@@ -53,7 +53,7 @@ class Modem(QtCore.QObject):
             response = self._opener.open(urljoin(self._baseUrl, section),
                                          timeout=1).read()
         except (URLError, socket.timeout):
-            return ElementTree.fromstring('<?xml version="1.0" encoding="UTF-8"?><error><code>100004</code><message></message></error>')
+            return ElementTree.Element("")
         else:
             return ElementTree.fromstring(response)
 

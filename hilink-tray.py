@@ -173,12 +173,12 @@ def parseArgs():
 
     parser.add_argument(
         "-ip", "--ip",
-        help="modem's ip adress",
+        help="modem's ip address",
         nargs="?", default="192.168.8.1")
 
     parser.add_argument(
         "-v", "--version",
-        action="version", version="%(prog)s 4.0")
+        action="version", version="%(prog)s 4.1")
 
     return parser.parse_args()
 
