@@ -1,5 +1,6 @@
 from PySide import QtCore, QtGui
 from PySide.phonon import Phonon
+from hilink.settings import SettingsDialog
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
@@ -24,15 +25,18 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def createMenu(self):
         menu = QtGui.QMenu()
 
-        self.connectAction = QtGui.QAction("Connect", menu)
+        self.connectAction = menu.addAction("Connect")
         self.connectAction.triggered.connect(self.toggleConnect)
         self.connectAction.setVisible(False)
-        menu.addAction(self.connectAction)
 
-        self.rebootAction = QtGui.QAction("Reboot", menu)
+        self.rebootAction = menu.addAction("Reboot")
         self.rebootAction.triggered.connect(self._modem.reboot)
         self.rebootAction.setVisible(False)
-        menu.addAction(self.rebootAction)
+
+        menu.addSeparator()
+
+        self.settingsAction = menu.addAction("Settings")
+        self.settingsAction.triggered.connect(self.showSettingsDialog)
 
         menu.addSeparator()
 
@@ -41,6 +45,12 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         menu.addAction(quitAction)
 
         return menu
+
+    def showSettingsDialog(self):
+        dialog = SettingsDialog(self._modem.ip, self._modem.interval)
+        if dialog.exec_() == SettingsDialog.Accepted:
+            self._modem.ip = dialog.ip
+            self._modem.interval = dialog.interval
 
     def quit(self):
         self.hide()

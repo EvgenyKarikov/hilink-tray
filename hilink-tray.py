@@ -3,14 +3,12 @@
 # Copyright: 2016, Wasylews
 # Author: Wasylews
 # License: MIT
-
-from __future__ import print_function
 import sys
 import signal
 import argparse
-from PySide import QtCore, QtGui
-from hilink.modem import Modem
-from hilink.indicator import ModemIndicator
+from PySide import QtGui
+from hilink.tray import Tray
+
 
 # load resources based on interpreter version
 if sys.hexversion >= 0x3000000:
@@ -129,6 +127,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
 def main(ip, timeout):
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     app = QtGui.QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
 
     monitorThread = QtCore.QThread()
     modem = Modem(ip)

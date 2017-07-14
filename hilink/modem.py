@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 from collections import OrderedDict
 import socket
 
+
 try:
     from urllib2 import build_opener, URLError
     from urlparse import urljoin
@@ -21,10 +22,34 @@ class Modem(QtCore.QObject):
     unreadMessagesCountChanged = QtCore.Signal(int)
     finished = QtCore.Signal()
 
-    def __init__(self, ip):
+    def __init__(self, ip, interval):
         super(Modem, self).__init__()
         self._opener = build_opener()
-        self._baseUrl = "http://{}".format(ip)
+
+        self._requestTimer = QtCore.QTimer()
+        self._requestTimer.timeout.connect(self._updateInfo)
+
+        self.ip = ip
+        self.interval = interval
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @ip.setter
+    def ip(self, value):
+        self._ip = value
+        self._baseUrl = "http://{}".format(value)
+
+    @property
+    def interval(self):
+        return self._interval
+
+    @interval.setter
+    def interval(self, value):
+        self._interval = value
+        # QTimer uses milliseconds
+        self._requestTimer.setInterval(value * 1000)
 
     def finish(self):
         self.finished.emit()
@@ -45,8 +70,7 @@ class Modem(QtCore.QObject):
 
     def _post(self, section, msg):
         response = self._opener.open(urljoin(self._baseUrl, section),
-                                     data=msg).read()
-        print("[Response]", response)
+                                     data=msg.encode()).read()
 
     def _getXml(self, section):
         try:
@@ -182,6 +206,10 @@ class Modem(QtCore.QObject):
             self.signalParamsChanged.emit(params)
 
     def monitor(self):
+        self._requestTimer.start()
+
+    def _updateInfo(self):
+        print(self.ip, self.interval)
         self._updateTokens()
         self.monitorMessages()
         self.monitorStatus()
