@@ -1,22 +1,5 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-# Copyright: 2016, Wasylews
-# Author: Wasylews
-# License: MIT
-
-from __future__ import print_function
-import sys
-import signal
-import argparse
 from PySide import QtCore, QtGui
-from hilink.modem import Modem
-from hilink.indicator import ModemIndicator
-
-# load resources based on interpreter version
-if sys.hexversion >= 0x3000000:
-    import hilink.res3_rc
-else:
-    import hilink.res_rc
+from PySide.phonon import Phonon
 
 
 class ModemIndicator(QtGui.QSystemTrayIcon):
@@ -80,13 +63,13 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
         if messageCount > 0:
             if messageCount > self._lastMessageCount:
                 self._playSound()
-            self._status[1] = "New messages: %d" % messageCount
+            self._status[1] = "New Messages: %d" % messageCount
         else:
             self._status[1] = ""
         self._lastMessageCount = messageCount
 
     def statusChanged(self, status, operator):
-        if status == "Modem offline":
+        if status == "No HiLink Detected":
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(False)
         elif status == "Connected":
@@ -98,8 +81,8 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
             self.rebootAction.setVisible(True)
             self.connectAction.setText("Connect")
 
-        if (operator == "No service" or
-                status in ["Connecting...", "Disconnecting..."]):
+        if (operator == "No Service" or
+                status in ["Connecting", "Disconnecting"]):
             self.connectAction.setVisible(False)
             self.rebootAction.setVisible(True)
 
@@ -124,65 +107,3 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
     def _playerLog(self, newState, oldState):
         if newState == Phonon.ErrorState:
             print(self.player.errorString())
-
-
-def main(ip, timeout):
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    app = QtGui.QApplication(sys.argv)
-
-    monitorThread = QtCore.QThread()
-    modem = Modem(ip)
-    modem.moveToThread(monitorThread)
-
-    modem.finished.connect(monitorThread.quit)
-    monitorThread.finished.connect(app.quit)
-
-    timer = QtCore.QTimer()
-    timer.setInterval(timeout)
-    timer.moveToThread(monitorThread)
-
-    monitorThread.started.connect(timer.start)
-    timer.timeout.connect(modem.monitor)
-
-    trayIndicator = ModemIndicator(modem)
-    modem.levelChanged.connect(
-        trayIndicator.signalLevelChanged, QtCore.Qt.QueuedConnection)
-    modem.statusChanged.connect(
-        trayIndicator.statusChanged, QtCore.Qt.QueuedConnection)
-    modem.signalParamsChanged.connect(
-        trayIndicator.signalParamsChanged, QtCore.Qt.QueuedConnection)
-    modem.unreadMessagesCountChanged.connect(
-        trayIndicator.needNotify, QtCore.Qt.QueuedConnection)
-
-    trayIndicator.show()
-    monitorThread.start()
-
-    return app.exec_()
-
-
-def parseArgs():
-    parser = argparse.ArgumentParser(
-        description="hilink-tray - HiLink modems tray monitor",
-        add_help=True)
-
-    parser.add_argument(
-        "-t", "--timeout",
-        help="check modem params each [TIMEOUT] seconds",
-        type=int,
-        nargs="?", default=5)
-
-    parser.add_argument(
-        "-ip", "--ip",
-        help="modem's ip address",
-        nargs="?", default="192.168.8.1")
-
-    parser.add_argument(
-        "-v", "--version",
-        action="version", version="%(prog)s 4.1")
-
-    return parser.parse_args()
-
-
-if __name__ == '__main__':
-    args = parseArgs()
-    sys.exit(main(args.ip, args.timeout * 1000))
