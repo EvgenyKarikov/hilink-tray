@@ -175,7 +175,7 @@ class Modem(QtCore.QObject):
         """Monitor signal parameters"""
         try:
             signalXml = self._getXml("/api/device/signal")
-        except URLError, socket.timeout:
+        except (URLError, socket.timeout):
             self.signalParamsChanged.emit({})
         else:
             params = self.getSignalParams(signalXml)
