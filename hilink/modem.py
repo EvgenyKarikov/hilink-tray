@@ -209,7 +209,6 @@ class Modem(QtCore.QObject):
         self._requestTimer.start()
 
     def _updateInfo(self):
-        print(self.ip, self.interval)
         self._updateTokens()
         self.monitorMessages()
         self.monitorStatus()
