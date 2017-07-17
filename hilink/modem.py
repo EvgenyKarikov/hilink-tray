@@ -26,7 +26,7 @@ class Modem(QtCore.QObject):
         super(Modem, self).__init__()
         self._opener = build_opener()
 
-        self._requestTimer = QtCore.QTimer()
+        self._requestTimer = QtCore.QTimer(self)
         self._requestTimer.timeout.connect(self._updateInfo)
 
         self.ip = ip
