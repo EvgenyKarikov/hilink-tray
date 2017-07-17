@@ -1,2 +1,9 @@
+# Python compiled modules
 *.pyc
+__pycache__/
+
+# debian packages
 *.deb
+
+# config file
+hilink.conf
