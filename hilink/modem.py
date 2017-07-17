@@ -20,6 +20,7 @@ class Modem(QtCore.QObject):
     statusChanged = QtCore.Signal(str, str)
     signalParamsChanged = QtCore.Signal(OrderedDict)
     unreadMessagesCountChanged = QtCore.Signal(int)
+    _intervalChanged = QtCore.Signal(int)
     finished = QtCore.Signal()
 
     def __init__(self, ip, interval):
@@ -31,6 +32,7 @@ class Modem(QtCore.QObject):
 
         self.ip = ip
         self.interval = interval
+        self._intervalChanged.connect(self._updateTimerInterval)
 
     @property
     def ip(self):
@@ -41,15 +43,18 @@ class Modem(QtCore.QObject):
         self._ip = value
         self._baseUrl = "http://{}".format(value)
 
-    @property
+    def _updateTimerInterval(self, value):
+        # QTimer uses milliseconds
+        self._requestTimer.setInterval(value * 1000)
+
+    @QtCore.Property(int, notify=_intervalChanged)
     def interval(self):
         return self._interval
 
     @interval.setter
-    def interval(self, value):
+    def setInterval(self, value):
         self._interval = value
-        # QTimer uses milliseconds
-        self._requestTimer.setInterval(value * 1000)
+        self._intervalChanged.emit(value)
 
     def finish(self):
         self.finished.emit()
