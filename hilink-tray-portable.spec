@@ -23,6 +23,6 @@ exe = EXE(pyz,
           a.datas,
           name='hilink-tray',
           debug=False,
-          strip=True,
+          strip=False,
           upx=False,
           console=False , icon='hilink-tray.ico')
