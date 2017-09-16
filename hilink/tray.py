@@ -50,4 +50,4 @@ class Tray(QtCore.QObject):
         settings.setValue("general/interval", self._modem.interval)
 
     def _createSettings(self):
-        return QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "GeniusInc.", "hilink")
+        return QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "HiLink Tray", "hilink")
