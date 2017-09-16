@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "HiLink Tray"
-#define MyAppVersion "4.1"
+#define MyAppVersion "4.1.1"
 #define MyAppPublisher "Илья Федин & Wasylews (aka Василий Сабов)"
 #define MyAppURL "https://github.com/ilya-fedin/hilink-tray"
 #define MyAppExeName "hilink-tray.exe"
@@ -41,17 +41,17 @@ Source: "dist\hilink-tray\*"; DestDir: "{app}"; Flags: ignoreversion recursesubd
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "%APPDATA%"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "%APPDATA%"; Tasks: desktopicon
+Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKLM; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "HiLinkTray"; ValueData: "{app}\{#MyAppExeName}"; Flags: createvalueifdoesntexist uninsdeletevalue
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; WorkingDir: "{userappdata}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-Type: files; Name: "{userappdata}\hilink.conf"
+Type: filesandordirs; Name: "{userappdata}\{#MyAppName}"
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/f /im {#MyAppExeName}"; Flags: skipifdoesntexist runhidden
