@@ -1,6 +1,6 @@
 # Maintainer: Ilya Fedin <fedin-ilja2010@ya.ru>
 pkgname=hilink-tray
-pkgver=4.0
+pkgver=4.1
 pkgrel=1
 pkgdesc="Displays signal level in a tray at Huawei modems on HiLink firmware"
 arch=('any')
