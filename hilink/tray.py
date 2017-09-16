@@ -12,7 +12,7 @@ class Tray(QtCore.QObject):
         self.setup(modemIp, requestInterval)
 
     def loadSettings(self, ip, interval):
-        settings = QtCore.QSettings("hilink.conf", QtCore.QSettings.IniFormat, self)
+        settings = self._createSettings()
         modemIp = ip or settings.value("general/ip", "192.168.8.1")
         requestInterval = interval or int(settings.value("general/interval", 5))
         return (modemIp, requestInterval)
@@ -45,6 +45,9 @@ class Tray(QtCore.QObject):
         QtGui.qApp.quit()
 
     def saveSettings(self):
-        settings = QtCore.QSettings("hilink.conf", QtCore.QSettings.IniFormat, self)
+        settings = self._createSettings()
         settings.setValue("general/ip", self._modem.ip)
         settings.setValue("general/interval", self._modem.interval)
+
+    def _createSettings(self):
+        return QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "GeniusInc.", "hilink")
