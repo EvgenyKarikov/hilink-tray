@@ -1,0 +1,63 @@
+diff --git a/hilink/indicator.py b/hilink/indicator.py
+index 2e20730..7babe88 100644
+--- a/hilink/indicator.py
++++ b/hilink/indicator.py
+@@ -1,5 +1,7 @@
++import os
++import wave
+ from PySide import QtCore, QtGui
+-from PySide.phonon import Phonon
++from pyaudio import PyAudio
+ from hilink.settings import SettingsDialog
+ 
+ 
+@@ -12,6 +14,9 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
+     # status, messages, params
+     _status = [""] * 3
+ 
++    # chunk size
++    _chunk = 1024
++
+     def __init__(self, modem):
+         super(ModemIndicator, self).__init__()
+         self._modem = modem
+@@ -19,8 +24,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
+         menu = self.createMenu()
+         self.setContextMenu(menu)
+ 
+-        self.player = Phonon.createPlayer(Phonon.MusicCategory)
+-        self.player.stateChanged.connect(self._playerLog)
++        self.player = PyAudio()
+ 
+     def createMenu(self):
+         menu = QtGui.QMenu()
+@@ -53,6 +57,7 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
+             self._modem.interval = dialog.interval
+ 
+     def quit(self):
++        self.player.terminate()
+         self.hide()
+         self._modem.finish()
+ 
+@@ -110,10 +115,14 @@ class ModemIndicator(QtGui.QSystemTrayIcon):
+         self.setToolTip("\n".join(filter(None, self._status)))
+ 
+     def _playSound(self):
+-        source = Phonon.MediaSource("://sounds/unread_message.wav")
+-        self.player.setCurrentSource(source)
+-        self.player.play()
+-
+-    def _playerLog(self, newState, oldState):
+-        if newState == Phonon.ErrorState:
+-            print(self.player.errorString())
++        source = wave.open(os.environ["SNAP"] + "/usr/share/hilink-tray/sounds/unread_message.wav", "rb")
++        stream = self.player.open(format=self.player.get_format_from_width(source.getsampwidth()),
++                        channels=source.getnchannels(),
++                        rate=source.getframerate(),
++                        output=True)
++        data = source.readframes(self._chunk)
++        while len(data) > 0:
++            stream.write(data)
++            data = source.readframes(self._chunk)
++        stream.stop_stream()
++        stream.close()

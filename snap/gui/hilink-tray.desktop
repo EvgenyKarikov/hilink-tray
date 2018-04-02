@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=HiLink Tray
+GenericName=In-tray Monitor for Huawei HiLink Devices
+GenericName[ru]=Мониторинг устройств Huawei HiLink в системном лотке
+Comment=Displays the signal level of Huawei HiLink devices in the system tray
+Comment[ru]=Отображает уровень сигнала устройств Huawei HiLink в системном лотке
+Exec=hilink-tray %U
+Icon=${SNAP}/usr/share/hilink-tray/hilink-tray.png
+Type=Application
+Categories=Qt;Application;Network;
+Terminal=false
