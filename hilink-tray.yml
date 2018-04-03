@@ -1,0 +1,29 @@
+app: hilink-tray
+binpatch: true
+
+ingredients:
+  dist: trusty
+  sources: 
+    - deb http://archive.ubuntu.com/ubuntu/ trusty main universe
+  packages:
+    - hilink-tray
+    - phonon-backend-vlc
+  script: 
+    - wget -c https://github.com/ilya-fedin/hilink-tray/raw/packages/dpkg/hilink-tray.deb
+
+script:
+  - cat <<EOF > hilink-tray.desktop
+  - [Desktop Entry]
+  - Name=HiLink Tray
+  - GenericName=In-tray Monitor for Huawei HiLink Devices
+  - GenericName[ru]=Мониторинг устройств Huawei HiLink в системном лотке
+  - Comment=Displays the signal level of Huawei HiLink devices in the system tray
+  - Comment[ru]=Отображает уровень сигнала устройств Huawei HiLink в системном лотке
+  - Exec=hilink-tray %U
+  - Icon=hilink-tray
+  - Type=Application
+  - Categories=Qt;Application;Network;
+  - Terminal=false
+  - EOF
+  - wget -O hilink-tray.png -c https://raw.githubusercontent.com/ilya-fedin/hilink-tray/master/images/icon_signal_05.png
+
